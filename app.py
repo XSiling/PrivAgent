@@ -1,20 +1,26 @@
 import time
 from email_receiver import retrieve_messages
-from data import display_gmail_messages
+from tool import display_gmail_messages
+from email_receiver import EmailProcessor
 
 # continuously running the backend server, including:
 # for certain period:
 #   retrieve the information
-def run_server():
-    while True:
+class Server:
+    email_processor = EmailProcessor()
+
+    def run_server(self):
         new_messages = retrieve_messages()
-        display_gmail_messages(new_messages)
-        time.sleep(5 * 1000)
-        break
-        # just run one time temporarily
         
+        # just process the first message now
+        message = new_messages[0]
+        display_gmail_messages([message])
 
+        prompt = self.email_processor.generate_prompt(message)
+        response = self.email_processor.send_message_to_llm_agent(prompt)
 
+        print("response:", response)
 
 if __name__ == '__main__':
-    run_server()
+    server = Server()
+    server.run_server()
