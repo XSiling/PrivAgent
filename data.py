@@ -1,4 +1,5 @@
-
+class GmailConfiguration:
+    email_whitelist = ["jih119@ucsd.edu", "xisheng@ucsd.edu"]
 
 
 class GmailMessage:
