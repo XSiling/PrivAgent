@@ -23,8 +23,8 @@ class Server:
         print("response:", response)
 
         service = self.action_service.request_service()
-        self.action_service.send_api_request(service, request)
-        
+        self.action_service.send_api_request(service, "")
+
 
 
 if __name__ == '__main__':
