@@ -3,6 +3,7 @@
 # https://platform.openai.com/docs/api-reference/chat
 
 from openai import OpenAI
+from data import LLMResponse, ActionServiceName
 
 base_url = "http://localhost:1234/v1" # Run LM Studio server on this port before running this code
 
@@ -21,8 +22,46 @@ class LLMAgent:
         )
 
         response = completion.choices[0].message.content
-        print(response)
-        return response
+
+        LLM_response = self.response_to_LLMResponse(response)
+
+        return LLM_response
+    
+    def response_to_LLMResponse(self, response):
+        llm_response = LLMResponse()
+        llm_response.set_service_name(ActionServiceName.CALENDAR)
+        llm_response.set_service_version("v3")
+        llm_response.set_scope(["https://www.googleapis.com/auth/calendar"])
+        
+        event = {
+            'summary': 'Attend the project meeting',
+            'location': 'CSE Building',
+            'description': 'Attend the project meeting discussion with Xin',
+            'start': {
+                'dateTime': '2024-10-24T13:00:00-07:00',
+                'timeZone': 'America/Los_Angeles',
+            },
+            'end': {
+                'dateTime': '2024-10-24T14:00:00-07:00',
+                'timeZone': 'America/Los_Angeles',
+            },
+            'recurrence': [
+                'RRULE:FREQ=DAILY;COUNT=1'
+            ],
+            'attendees': [
+                {'email': 'jih119@ucsd.edu'},
+                {'email': 'xisheng@ucsd.edu'},
+            ],
+            'reminders': {
+                'useDefault': True,
+            },
+        }
+
+        calendarId='primary'
+        
+        llm_response.set_params({'calendarId':calendarId, 'body':event})
+        return llm_response
+
     
 
 if __name__ == '__main__':
