@@ -1,6 +1,6 @@
 from gmail_authentication import GmailService
 from llm_agent import LLMAgent
-from data import GmailMessage, GmailConfiguration
+from data import GmailMessage, GmailConfiguration, LLMResponse
 from base64 import urlsafe_b64decode
 from tool import extract_email_address_from_sender
 
@@ -8,7 +8,7 @@ SEND_FROM_KEY = 'From'
 DATE_KEY = 'Date'
 SEND_TO_KEY = 'To'
 
-class EmailProcessor:
+class EmailService:
     gmail_service = GmailService()
     llm_agent = LLMAgent()
     gmail_configurations = GmailConfiguration()
@@ -41,9 +41,9 @@ class EmailProcessor:
         gmail_message = GmailMessage(send_from, date, send_to, content)
 
         # check whether the sender is in the whitelist
-        print("sender:", gmail_message.send_from)
+        # print("sender:", gmail_message.send_from)
         email_address = extract_email_address_from_sender(gmail_message.send_from)
-        print("email address of the sender:", email_address)
+        # print("email address of the sender:", email_address)
         if email_address not in self.gmail_configurations.email_whitelist:
             return None
 
@@ -70,4 +70,8 @@ class EmailProcessor:
     def send_message_to_llm_agent(self, message: str):
         response = self.llm_agent.send_llm_request(message)
         return response
+    
+    def save_history(self, response: LLMResponse, confirm_response: bool):
+        # to be written, save the history to the RAG
+        pass
 

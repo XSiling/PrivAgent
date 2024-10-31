@@ -1,29 +1,38 @@
 import time
 from tool import display_gmail_messages
-from email_receiver import EmailProcessor
+from email_service import EmailService
 from action_service import ActionService
+from confirm_service import ConfirmService
 
 # continuously running the backend server, including:
 # for certain period:
 #   retrieve the information
 class Server:
-    email_processor = EmailProcessor()
+    email_service = EmailService()
     action_service = ActionService()
+    confirm_service = ConfirmService()
 
     def run_server(self):
-        new_messages = self.email_processor.retrieve_messages()
+        # retrive message from email server
+        new_messages = self.email_service.retrieve_messages()
 
         # just process the first message now
         message = new_messages[0]
-        display_gmail_messages([message])
+        # display_gmail_messages([message])
 
-        prompt = self.email_processor.generate_prompt(message)
-        response = self.email_processor.send_message_to_llm_agent(prompt)
+        # send prompt to LLM
+        prompt = self.email_service.generate_prompt(message)
+        response = self.email_service.send_message_to_llm_agent(prompt)
 
-        print("response:", response)
+        # confirm from user
+        confirm_response = self.confirm_service.get_confirmation(response)
 
-        service = self.action_service.request_service()
-        self.action_service.send_api_request(service, "")
+        if confirm_response:
+            # send action to action service
+            self.action_service.perform_action(response)
+
+        # send history to LLM
+        self.email_service.save_history(response, confirm_response)
 
 
 
