@@ -68,6 +68,6 @@ class EmailProcessor:
         return ""
 
     def send_message_to_llm_agent(self, message: str):
-        response = self.llm_agent.send_llm_request(message)
+        response = self.llm_agent.chat(message)
         return response
 
