@@ -17,7 +17,7 @@ class Server:
         new_messages = self.email_service.retrieve_messages()
 
         # just process the first message now
-        message = new_messages[1]
+        message = new_messages[0]
         # display_gmail_messages([message])
 
         # send prompt to LLM

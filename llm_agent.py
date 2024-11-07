@@ -26,7 +26,7 @@ class LLMAgent:
         completion = self.client.chat.completions.create(
             model="model-identifier",
             messages=self.messages,
-            temperature=0.7,
+            temperature=0.1,
         )
 
         response = completion.choices[0].message.content
@@ -55,7 +55,7 @@ class LLMAgent:
             Do not add things like 'I need to do this' or 'do you need me to do this' \
             Do not add order numbers, bullet points, or any markdown format. Simply answer in plain english text. \
             Do not include instructions on credentials. \
-            You don't need steps about fetching time or location. Use Los Angeles pacific timezone. \
+            You don't need steps about fetching time or location. All datetime in email is Los Angeles pacific timezone. In the code, convert the time to UTC time. \
             Example prompt: Delete a calendar event tomorrow at 9am and create a new one called 'meeting'. \
             Example answer: \
             Get the list of calendar events for tomorrow around 9am. \
@@ -75,47 +75,13 @@ class LLMAgent:
         system_msg = "You are an LLM agent that helps user generate function calls to Google API. \
             Based on the user's (sender's) desired action on Google account, return a piece of code using Google HTTP API to perform the user-specified action. \
             DO NOT use Google Python Client Library. \
-            Use time in the date of original forwarded email. Use Los Angeles pacific timezone. \
+            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. In the code, convert the time to UTC time. \
             Do not give instructions, do not give multiple outputs. \
             "
         
         response = self.get_llm_response(system_msg, message)
 
         print("Code: ", response)
-        return response
-
-
-    # Deprecated: For APICall_python only
-    def get_service_name(self, message):
-        system_msg = "You are an LLM agent that helps user generate function calls to Google Python Client Library. \
-            Based on the user's desired action on Google account, return the exact Google API Service name of the user-specified action. \
-            Do not give instructions, do not format the output, just one single plain English word of the high level API service name. \
-            Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: calendar \
-            Example prompt 2: Send an email to Jieyi. \
-            Example answer 2: gmail \
-            Accepted output format: 'calendar' 'gmail' 'doc' 'meeting' \
-            "
-        
-        response = self.get_llm_response(system_msg, message)
-
-        print("Service Name: ", response)
-        return response
-
-
-    # Deprecated: For APICall_python only
-    def get_service_version(self, message):
-        system_msg = "You are an LLM agent that helps user generate function calls to Google Python Client Library. \
-            Based on the user's desired action on Google account and the above generated service name, return only one word of the Google API Service version of the user-specified instruction. \
-            Do not give instructions, do not format the output, do not write code, do not include the service name, \
-            just simply tell me the current API version. \
-            Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: v3 \
-            "
-        
-        response = self.get_llm_response(system_msg, message)
-
-        print("Service Version: ", response)
         return response
 
 
@@ -132,52 +98,6 @@ class LLMAgent:
         print("Service Scope: ", response)
         return response
 
-
-    # Deprecated: For APICall_python only
-    def get_service_methods(self, message):
-        # TODO: doesn't work, try first generate the code, then parse out the function calls
-        system_msg = "You are an LLM agent that helps user generate function calls to Google Python Client Library. \
-            Based on the user's desired action on Google account and the above generated code, \
-            return in one line a list of Google Python Client Library functions we need to call to perform the user-specified instruction\" \
-            Do not give instructions, do not format the output, do not include the params for the function call, just a plain python list of Google Python function names. \
-            Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: ['events', 'insert'] \
-            "
-        
-        response = self.get_llm_response(system_msg, message)
-        print("Service Methods: ", response)
-
-        return response
-
-
-    # Deprecated: For APICall_python only
-    def get_service_params_depr(self, message):
-        # TODO: doesn't work
-        system_msg = "You are an LLM agent that helps user generate function calls to Google Python Client Library. \
-            The user will call the function that you told them just now. \
-            Based on the user's desired action on Google account and the above generated service name, \
-            return a python object of Google Python Client Library functions we need to call to perform the user-specified instruction\" \
-            Do not give instructions, do not format the output, do not include the params for the function call, just a plain python list of Google Python function names. \
-            Example prompt: Create a calendar event tomorrow at 9am. \
-            Use Los Angeles pacific timezone. \
-            Example answer: {{body: {{ \
-                'summary': 'meeting', \
-                'start': {{ \
-                    'dateTime': '2024-10-24T09:00:00-07:00', \
-                    'timeZone': 'America/Los_Angeles', \
-                }}, \
-                'end': {{ \
-                    'dateTime': '2024-10-24T10:00:00-07:00', \
-                    'timeZone': 'America/Los_Angeles', \
-                }}, \
-            }} \
-            "
-        
-        response = self.get_llm_response(system_msg, message)
-
-        print("Service Params: ", response)
-        return response
-    
 
     def get_service_api(self, message):
         system_msg = "You are an LLM agent that helps user generate function calls to Google HTTP API. \
@@ -210,7 +130,7 @@ class LLMAgent:
 
 
     def get_service_params(self, message):
-        system_msg = "You are an LLM agent that helps user generate function calls to Google Python Client Library. \
+        system_msg = "You are an LLM agent that helps user generate function calls to Google HTTP API. \
             Extract the 'params' variable in the above generated code, and return it in one line as a valid python dictionary. \
             Do not include the variable name, do not give instructions, do not include the variable name and the = sign, do not include any markdown format, just a plain python object of API call parameters. \
             If there's no params needed, simply give me a pair of curly braces representing the empty dictionary. \
@@ -227,9 +147,9 @@ class LLMAgent:
 
 
     def get_service_body(self, message):
-        system_msg = "You are an LLM agent that helps user generate function calls to Google Python Client Library. \
+        system_msg = "You are an LLM agent that helps user generate function calls to Google HTTP APIy. \
             Based on the user's desired action on Google account and the above generated code, \
-            return a Python dictionary of the contents we need to pass to the API as body or data, as a one-line string. \
+            return a Python dictionary of the contents we need to pass to the API as 'body' or 'data', as a one-line string. \
             If there's no body or data needed, simply give me a pair of curly braces representing the empty dictionary. \
             Do not give instructions, do not format the output, do not include the params for the function call, do not include any markdown format, just a plain python list of Google Python function names. \
             Do not include variable names. Change it into user information based on your knowledge. If nothing is known, use some default information. \
@@ -246,30 +166,6 @@ class LLMAgent:
         print("Service Body: ", response)
 
         return ast.literal_eval(response)
-
-
-    # For APICall_python only
-    def get_api_calls_python(self, message):
-        print("---------Generating an api call---------")
-        self.messages = [None]
-        instructions = self.get_list_of_instructions(message)
-        api_calls = []
-        for inst in instructions:
-            print("---Working on an instruction---")
-            code = self.get_service_code(inst)
-            service_name = self.get_service_name(inst)
-            version = self.get_service_version(inst)
-            scope = self.get_service_scope(inst)
-            methods = self.get_service_methods(inst)
-            params = self.get_service_params(inst)
-            curr_api_call = APICall(
-                service_name, version, scope, methods, params,
-            )
-            curr_api_call.print()
-            api_calls.append(curr_api_call)
-        
-        self.messages = [None]
-        return api_calls
     
     
     def get_api_calls(self, message):
