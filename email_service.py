@@ -14,14 +14,28 @@ class EmailService:
     llm_agent = LLMAgent()
     gmail_configurations = GmailConfiguration()
 
+    def __init__(self, server_start_time):
+        self.server_start_time = server_start_time
+        self.email_history = []
+
     # apply the possible rules to filter out the emails
     # 1. only allow those are in the whitelist to send the emails
     # 2. extract the format from the internal Gmail to GmailMessage
     def filter_message(self, msg):
+        internalDate = msg['internalDate']
+        id = msg['id']
         payload = msg['payload']
         headers = payload['headers']
         parts = payload['parts']
         send_from, date, send_to, content = "", "", "", ""
+
+        # the email is sent before the server starts, ignore it
+        if float(internalDate) <= self.server_start_time:
+            return None
+        
+        # the email is already processed before, ignore it
+        if id in self.email_history:
+            return None
 
         for header in headers:
             if header['name'] == SEND_FROM_KEY:
@@ -45,7 +59,7 @@ class EmailService:
         print("Send To: ", send_to)
         print("Content: ", content)
 
-        gmail_message = GmailMessage(send_from, date, send_to, content)
+        gmail_message = GmailMessage(id, send_from, date, send_to, content)
 
         email_address = extract_email_address_from_sender(gmail_message.send_from)
         if email_address not in self.gmail_configurations.email_whitelist:
@@ -53,7 +67,7 @@ class EmailService:
 
         return gmail_message
     
-    def retrieve_messages(self, start_timestamp = None, end_timestamp = None):
+    def retrieve_messages(self):
         service = self.gmail_service.get_service()
 
         # currently just get all the messages at a time
@@ -65,6 +79,7 @@ class EmailService:
             filtered_msg = self.filter_message(msg)
             if filtered_msg != None:
                 messages.append(filtered_msg)
+                self.email_history.append(filtered_msg.id)
         return messages
     
     def generate_prompt(self, message: GmailMessage):
