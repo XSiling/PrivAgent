@@ -3,6 +3,7 @@ from llm_agent import LLMAgent
 from data import GmailMessage, GmailConfiguration, LLMResponse
 from base64 import urlsafe_b64decode
 from tool import extract_email_address_from_sender
+import re
 
 SEND_FROM_KEY = 'From'
 DATE_KEY = 'Date'
@@ -33,17 +34,17 @@ class EmailService:
                 send_to = header['value']
 
         for part in parts:
-            data = part['body']['data']
-            content += data
+            if part['mimeType'] == 'text/plain':
+                data = part['body']['data']
+                content += data
 
         content = urlsafe_b64decode(content)
+        content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
+        print(content)
 
         gmail_message = GmailMessage(send_from, date, send_to, content)
 
-        # check whether the sender is in the whitelist
-        # print("sender:", gmail_message.send_from)
         email_address = extract_email_address_from_sender(gmail_message.send_from)
-        # print("email address of the sender:", email_address)
         if email_address not in self.gmail_configurations.email_whitelist:
             return None
 
