@@ -4,11 +4,13 @@ from email_service import EmailService
 from action_service import ActionService
 from confirm_service import ConfirmService
 from queue import Queue
+from data import APICall
 # continuously running the backend server, including:
 # for certain period:
 #   retrieve the information
 
 class ConfirmEvent:
+    message: APICall
     
     def __init__(self, message):
         self.message = message
@@ -40,7 +42,7 @@ class Server:
 
         # send prompt to LLM
         prompt = self.email_service.generate_prompt(message)
-        response = self.email_service.send_message_to_llm_agent(prompt)
+        response = self.email_service.send_message_to_llm_agent(prompt)[0]
 
         # confirm from user
         self.event_queue.put(ConfirmEvent(response))
@@ -49,7 +51,7 @@ class Server:
 
         if confirm_response:
             # send action to action service
-            self.action_service.perform_action(response)
+            self.action_service.send_http_request(response)
             print("has done the action")
         # send history to LLM
         self.email_service.save_history(response, confirm_response)

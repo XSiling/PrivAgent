@@ -12,15 +12,15 @@ class GmailService():
     def get_service(self):
         if self.service == None:
             creds = None
-            if not os.path.exists('token.json'):
+            if not os.path.exists('token_privAgent.json'):
                 flow = InstalledAppFlow.from_client_secrets_file(
                         'credentials.json', SCOPES)
                 creds = flow.run_local_server(port=0)
                 # Save the credentials for the next run
-                with open('token.json', 'w') as token:
+                with open('token_privAgent.json', 'w') as token:
                     token.write(creds.to_json())
             else:
-                creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+                creds = Credentials.from_authorized_user_file('token_privAgent.json', SCOPES)
                 # If there are no (valid) credentials available, let the user log in.
                 if not creds or not creds.valid:
                     if creds and creds.expired and creds.refresh_token:
@@ -30,7 +30,7 @@ class GmailService():
                             'credentials.json', SCOPES)
                         creds = flow.run_local_server(port=0)
                     # Save the credentials for the next run
-                    with open('token.json', 'w') as token:
+                    with open('token_privAgent.json', 'w') as token:
                         token.write(creds.to_json())
 
             # Call the Gmail API

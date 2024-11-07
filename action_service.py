@@ -5,46 +5,29 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import os.path
 import datetime
-from data import LLMResponse
+from data import APICall
+import requests
 
 # the service for sending API request to the destination
 class ActionService:
 
     def __init__(self):
         pass
-
-    def perform_action(self, response: LLMResponse):
-        scopes = response.scope
-        service_name = response.service_name.value
-        service_version = response.service_version
-
-        service = self.request_service(scopes, service_name, service_version)
-        api_result_response = self.send_api_request(service, response)
-        return api_result_response
-
-    def request_service(self, scopes, service_name, service_version):
-        try:
-            creds = None
-            credential_file_name = "credentials.json"
-
-            if not creds or not creds.valid:
-                if creds and creds.expired and creds.refresh_token:
-                    creds.refresh(Request())
-                else:
-                    flow = InstalledAppFlow.from_client_secrets_file(
-                        credential_file_name, scopes
-                    )
-                    creds = flow.run_local_server(port=0)
-        except:
-            print("No valid credentials")
-
-        service = build(service_name, service_version, credentials=creds)
-
-        return service
     
-    def send_api_request(self, service, llm_response: LLMResponse):
-        # currently assume we are adding an event
-        # event should be request.content.event
-        params = llm_response.params
-        event = service.events().insert(calendarId=params['calendarId'], body=params['body']).execute()
-        return True
+    def send_http_request(self, api_call: APICall):
+        try:
+            # Call the Calendar API
+            print("Calling the api")
+            match api_call.method:
+                case 'GET':
+                    response = requests.get(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
+                case 'POST':
+                    response = requests.post(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
+                case 'PUT':
+                    response = requests.put(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
+                case 'DELETE':
+                    response = requests.delete(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
+
+            print(response.text)
+        except Exception as error:
+            print(f"An error occurred: {error}")

@@ -1,6 +1,7 @@
 import datetime
 import os.path
 import requests
+import json
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -107,5 +108,24 @@ def get_calendar_events_with_http_api():
         print(f"An error occurred: {error}")
 
 
+def create_calendar_event_with_http_api():
+
+    try:
+        # Call the Calendar API
+        print("Creating calendar event")
+        headers = {
+            'Content-Type': 'application/json', 
+            'Authorization': 'Bearer ya29.a0AeDClZCm-VAwu6ZJ3QFaUqk46zy0SWD6xVYAuCKoY_XQX3JVufeVyxhzt_r96XCoO8Eyhz03q4_dpixWJqKNxdm1FPHbUYbE7ES41noKz6T3lFPd4Y_cf6ewHTfeknL88H55kk7ASVZ96wLoYRt6KcGsKjto1BUpPTtxmF_-aCgYKAa0SARASFQHGX2Mie3UAOtUE1ThDM3gYoDwxkA0175'
+        }
+        params = {'summary': 'Project Meeting with Jieyi', 'description': '', 'start': {'dateTime': '2024-10-24T13:00:00', 'timeZone': 'America/Los_Angeles'}, 'end': {'dateTime': '2024-10-24T14:30:00', 'timeZone': 'America/Los_Angeles'}}
+        body = {'summary': 'Project Meeting with Jieyi', 'description': '', 'start': {'dateTime': '2024-10-24T13:00:00', 'timeZone': 'America/Los_Angeles'}, 'end': {'dateTime': '2024-10-24T14:30:00', 'timeZone': 'America/Los_Angeles'}}
+        response = requests.post("https://www.googleapis.com/calendar/v3/calendars/primary/events", params=params, headers=headers, json=body)
+
+        print(response.text)
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
+
 if __name__ == '__main__':
-    get_calendar_events_with_http_api()
+    create_calendar_event_with_http_api()

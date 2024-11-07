@@ -1,6 +1,6 @@
 from gmail_authentication import GmailService
 from llm_agent import LLMAgent
-from data import GmailMessage, GmailConfiguration, LLMResponse
+from data import GmailMessage, GmailConfiguration, APICall
 from base64 import urlsafe_b64decode
 from tool import extract_email_address_from_sender
 import re
@@ -40,7 +40,10 @@ class EmailService:
 
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
-        print(content)
+        print("Send From: ", send_from)
+        print("Date: ", date)
+        print("Send To: ", send_to)
+        print("Content: ", content)
 
         gmail_message = GmailMessage(send_from, date, send_to, content)
 
@@ -65,14 +68,16 @@ class EmailService:
         return messages
     
     def generate_prompt(self, message: GmailMessage):
-        # to be written
-        return ""
+        # TODO: Improve this
+        prompt = "Sender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content)
+        print("Prompt: ", prompt)
+        return prompt
 
     def send_message_to_llm_agent(self, message: str):
-        response = self.llm_agent.chat(message)
+        response : list[APICall] = self.llm_agent.get_api_calls(message)
         return response
     
-    def save_history(self, response: LLMResponse, confirm_response: bool):
+    def save_history(self, response: APICall, confirm_response: bool):
         # to be written, save the history to the RAG
         pass
 

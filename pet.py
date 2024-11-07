@@ -43,8 +43,8 @@ class Pet:
         self.root.bind("<Button-3>", self.onRightClick)
         self.root.bind("<Key>", self.onKeyPress)
         self.label = tkinter.Label(self.root,bd=0,bg='black') # borderless window
-        if system() != 'Windows':
-            self.label.config(bg='systemTransparent')
+        # if system() != 'Windows':
+        #     self.label.config(bg='systemTransparent')
         self.label.pack()
         
         screen_width = self.root.winfo_screenwidth() # width of the entire screen
