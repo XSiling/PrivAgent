@@ -10,12 +10,14 @@ class ActionServiceName(Enum):
 
 
 class GmailMessage:
+    id = ""
     send_from = ""
     date = ""
     send_to = ""
     content = ""
 
-    def __init__(self, send_from, date, send_to, content):
+    def __init__(self, id, send_from, date, send_to, content):
+        self.id = id
         self.send_from = send_from
         self.date = date
         self.send_to = send_to
