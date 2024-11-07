@@ -17,7 +17,7 @@ class Server:
         new_messages = self.email_service.retrieve_messages()
 
         # just process the first message now
-        message = new_messages[0]
+        message = new_messages[1]
         # display_gmail_messages([message])
 
         # send prompt to LLM
@@ -25,14 +25,14 @@ class Server:
         response = self.email_service.send_message_to_llm_agent(prompt)
 
         # confirm from user
-        confirm_response = self.confirm_service.get_confirmation(response)
+        confirm_response = self.confirm_service.get_confirmation(response[0])
 
         if confirm_response:
             # send action to action service
-            self.action_service.perform_action(response)
+            self.action_service.send_http_request(response[0])
 
         # send history to LLM
-        self.email_service.save_history(response, confirm_response)
+        self.email_service.save_history(response[0], confirm_response)
 
 
 

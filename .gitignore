@@ -1,8 +1,4 @@
 test.ipynb
 *.pyc
-<<<<<<< Updated upstream
-token.json
-=======
 credentials*.json
 token*.json
->>>>>>> Stashed changes
