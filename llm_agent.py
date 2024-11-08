@@ -55,7 +55,7 @@ class LLMAgent:
             Do not add things like 'I need to do this' or 'do you need me to do this' \
             Do not add order numbers, bullet points, or any markdown format. Simply answer in plain english text. \
             Do not include instructions on credentials. \
-            You don't need steps about fetching time or location. All datetime in email is Los Angeles pacific timezone. In the code, convert the time to UTC time. \
+            You don't need steps about fetching time or location. All datetime in email is Los Angeles pacific timezone. \
             Example prompt: Delete a calendar event tomorrow at 9am and create a new one called 'meeting'. \
             Example answer: \
             Get the list of calendar events for tomorrow around 9am. \
@@ -75,7 +75,7 @@ class LLMAgent:
         system_msg = "You are an LLM agent that helps user generate function calls to Google API. \
             Based on the user's (sender's) desired action on Google account, return a piece of code using Google HTTP API to perform the user-specified action. \
             DO NOT use Google Python Client Library. \
-            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. In the code, convert the time to UTC time. \
+            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. \
             Do not give instructions, do not give multiple outputs. \
             "
         
@@ -135,7 +135,7 @@ class LLMAgent:
             Do not include the variable name, do not give instructions, do not include the variable name and the = sign, do not include any markdown format, just a plain python object of API call parameters. \
             If there's no params needed, simply give me a pair of curly braces representing the empty dictionary. \
             Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: FALSE \
+            Example answer: {} \
             Example prompt: Delete the calendar event tomorrow at 9am. Calendar ID: primary, Event ID: 12345 \
             Example answer: {{'calendarId': 'primary', 'eventId': '12345'}} \
             "
