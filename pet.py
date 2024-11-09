@@ -207,7 +207,7 @@ class Pet:
         self.label.pack()
     
     def onRightClick(self, event):
-        if self.current_mode == "pet":
+        if self.current_mode == "pet" and len(self.unsolved_event)==0:
             print("from pet to window")
             self.current_mode = "window"
             self.transform_pet_to_window()
