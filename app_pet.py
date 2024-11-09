@@ -52,10 +52,10 @@ class Server:
 
                 if confirm_response:
                     # send action to action service
-                    self.action_service.send_http_request(response)
+                    http_request_response = self.action_service.send_http_request(response)
                     print("has done the action")
                 # send history to LLM
-                self.email_service.save_history(response, confirm_response)
+                self.email_service.save_history(response, http_request_response)
 
             time.sleep(2)
 
