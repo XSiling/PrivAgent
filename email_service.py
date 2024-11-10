@@ -1,6 +1,6 @@
 from gmail_authentication import GmailService
 from llm_agent import LLMAgent
-from data import GmailMessage, GmailConfiguration, APICall
+from data import GmailMessage, GmailConfiguration, APICall, HistoryRecord
 from base64 import urlsafe_b64decode
 from tool import extract_email_address_from_sender
 import re
@@ -88,7 +88,8 @@ class EmailService:
         response : list[APICall] = self.llm_agent.get_api_calls(message)
         return response
     
-    def save_history(self, response: APICall, confirm_response: bool):
-        # to be written, save the history to the RAG
-        pass
+    def save_history(self, response: APICall, confirm_response):
+        self.email_history.append(
+            HistoryRecord(response, confirm_response)
+        )
 
