@@ -27,7 +27,7 @@ class ActionService:
                     response = requests.put(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
                 case 'DELETE':
                     response = requests.delete(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
-
             print(response.text)
+            return response
         except Exception as error:
             print(f"An error occurred: {error}")

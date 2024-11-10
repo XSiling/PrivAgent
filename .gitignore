@@ -2,3 +2,4 @@ test.ipynb
 *.pyc
 credentials*.json
 token*.json
+*.psd

@@ -1,5 +1,6 @@
 from enum import Enum
 from calendar_api_example import get_token
+from requests.models import Response
 
 class GmailConfiguration:
     email_whitelist = ["jih119@ucsd.edu", "xisheng@ucsd.edu"]
@@ -22,7 +23,6 @@ class GmailMessage:
         self.date = date
         self.send_to = send_to
         self.content = content
-
 
 class HTTPMethod(str, Enum):
     GET = "GET"
@@ -59,3 +59,11 @@ class APICall:
         print("Headers: ", self.headers)
         print("Params: ", self.params)
         print("Body: ", self.body)
+
+class HistoryRecord:
+    api_call: APICall
+    http_response: Response
+
+    def __init__(self, api_call: APICall, http_response:Response):
+        self.api_call = api_call
+        self.http_response = http_response
