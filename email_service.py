@@ -54,10 +54,6 @@ class EmailService:
 
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
-        print("Send From: ", send_from)
-        print("Date: ", date)
-        print("Send To: ", send_to)
-        print("Content: ", content)
 
         gmail_message = GmailMessage(id, send_from, date, send_to, content)
 
@@ -85,7 +81,7 @@ class EmailService:
     def generate_prompt(self, message: GmailMessage):
         # TODO: Improve this
         prompt = "Sender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content)
-        print("Prompt: ", prompt)
+        print("Prompt: \n", prompt)
         return prompt
 
     def send_message_to_llm_agent(self, message: str):

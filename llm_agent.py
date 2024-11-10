@@ -75,7 +75,7 @@ class LLMAgent:
         system_msg = "You are an LLM agent that helps user generate function calls to Google API. \
             Based on the user's (sender's) desired action on Google account, return a piece of code using Google HTTP API to perform the user-specified action. \
             DO NOT use Google Python Client Library. \
-            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. \
+            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. Specify the timezone in datetime object. \
             Do not give instructions, do not give multiple outputs. \
             "
         
@@ -94,9 +94,11 @@ class LLMAgent:
             "
         
         response = self.get_llm_response(system_msg, message)
+        lines = response.split("\n")
+        scope = [line for line in lines if "https://" in line][0].strip('`')
 
-        print("Service Scope: ", response)
-        return response
+        print("Service Scope: ", scope)
+        return scope
 
 
     def get_service_api(self, message):
@@ -109,9 +111,11 @@ class LLMAgent:
             "
         
         response = self.get_llm_response(system_msg, message)
-        print("Service API: ", response)
+        lines = response.split("\n")
+        api = [line for line in lines if "https://" in line][0].strip('`')
 
-        return response
+        print("Service API: ", api)
+        return api
 
 
     def get_service_method(self, message):
@@ -157,8 +161,8 @@ class LLMAgent:
             Example answer: {{ \
                 'summary': 'Meeting', \
                 'description': 'description', \
-                'start': {{'dateTime': '2024-10-27T09:00:00+08:00'}}, \
-                'end': {{ 'dateTime': '2024-10-27T10:00:00+08:00'}} \
+                'start': {{'dateTime': '2024-10-27T09:00:00+08:00', 'timeZone': 'America/Los_Angeles'}}, \
+                'end': {{ 'dateTime': '2024-10-27T10:00:00+08:00', 'timeZone': 'America/Los_Angeles'}} \
             }} \
             "
         
