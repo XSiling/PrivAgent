@@ -14,8 +14,9 @@ class EmailService:
     llm_agent = LLMAgent()
     gmail_configurations = GmailConfiguration()
 
-    def __init__(self, server_start_time):
+    def __init__(self, server_start_time, test_old_emails):
         self.server_start_time = server_start_time
+        self.test_old_emails = test_old_emails
         self.email_history = []
 
     # apply the possible rules to filter out the emails
@@ -30,7 +31,7 @@ class EmailService:
         send_from, date, send_to, content = "", "", "", ""
 
         # the email is sent before the server starts, ignore it
-        if float(internalDate) <= self.server_start_time:
+        if not self.test_old_emails and float(internalDate)/1000 <= self.server_start_time:
             return None
         
         # the email is already processed before, ignore it

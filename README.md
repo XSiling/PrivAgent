@@ -3,6 +3,7 @@ UCSD Fall 2024 CSE 227 Course Project
 
 Authors: Jieyi Huang, Xin Sheng
 ## Getting started
+* For the LM Studio, run models `meta-llama-3.1-8b-instruct` and `nomic-embed-text-v1.5`
 * To set up Environment, make sure anaconda or miniconda is installed on device, then in the desired environment run in terminal: 
 ```
 conda install --file requirements.txt
@@ -33,6 +34,16 @@ General:
 Prompt-specific: 
 
 Some information that needs to be filled in should be well-formatted and handled within the LLM agent
+
+Attempts: 
+* Use llama-3.2-3b and OpenAI package, not very good result
+* Prompt engineer into multiple questions with examples, better
+* Prompt engineer into multiple steps, not working
+* Use llama-3.1-8b, much better
+* Parse the output, higher accuracy
+* Lower the temperature, more stable
+* Deploy Rag using Llama-Index, move the api calls to Llam-Index query-engine as well, doesn't know chat history
+* Change to chat-engine, a lot better
 
 ### Google API
 Prerequisites we've done to get the authentication project working: 

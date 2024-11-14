@@ -24,12 +24,12 @@ class Server:
     handler_queue: Queue
 
     server_start_time = None
+    test_old_emails = True # Default should be False. Set this to true when testing with sent emails
+    test_one_email_only = True # Default should be False. Set this to true when testing with only one email
 
     def __init__(self):
         self.server_start_time = time.time()
-        fake_start_time = 1731018098000
-        self.email_service = EmailService(self.server_start_time)
-        # self.email_service = EmailService(fake_start_time)
+        self.email_service = EmailService(self.server_start_time, self.test_old_emails)
         self.action_service = ActionService()
         self.confirm_service = ConfirmService()
         self.event_queue = Queue()
@@ -56,6 +56,9 @@ class Server:
                     print("has done the action")
                 # send history to LLM
                 self.email_service.save_history(response, http_request_response)
+
+                if self.test_one_email_only:
+                    return
 
             time.sleep(2)
 
