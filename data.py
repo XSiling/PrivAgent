@@ -1,5 +1,4 @@
 from enum import Enum
-from calendar_api_example import get_token
 from requests.models import Response
 
 class GmailConfiguration:
@@ -41,14 +40,12 @@ class APICall:
     def __init__(self, scope, api, method, params, body):
         if not isinstance(params, dict) or not isinstance(body, dict):
             raise TypeError("Params or body is not a Python dictionary.")
-        scopes = [scope]
-        print(scopes)
         self.scope = scope
         self.api = api
         self.method = HTTPMethod[method]
         self.headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {get_token(scopes).token}'
+            'Authorization': ''
         }
         self.params = params
         self.body = body

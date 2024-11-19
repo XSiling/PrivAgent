@@ -1,45 +1,33 @@
 import ast
 import json
 from openai import OpenAI
-from data import ActionServiceName
 from data import APICall
+from rag_llm import RagLLM
 from utils import get_current_time
 import requests
 
 base_url = "http://localhost:1234/v1" # Run LM Studio server on this port before running this code
 
 class LLMAgent: 
-    client = OpenAI(base_url=base_url, api_key="lm-studio")
-    messages = [None]
 
+    client = RagLLM()
+    use_rag = True
 
     def print_messages(self):
         for m in self.messages:
             print(m)
 
 
-    # Given a system prompt message and a user prompt message, return the LLM response, and save the conversation to messages
-    def get_llm_response(self, system_msg, user_msg):
-        self.messages[0] = {"role": "system", "content": system_msg}
-        self.messages.append({"role": "user", "content": user_msg})
+    def query(self, system_msg, user_msg, use_rag):
+        return self.client.query(system_msg, user_msg, use_rag)
 
-        completion = self.client.chat.completions.create(
-            model="model-identifier",
-            messages=self.messages,
-            temperature=0.1,
-        )
-
-        response = completion.choices[0].message.content
-        self.messages.append({"role": "assistant", "content": response})
-
-        return response
-    
 
     # Simple chatbot in rhymes
     def chat(self, message):
-        response = self.get_llm_response("", message)
+        response = self.client.query("Always answer in rhymes. ", message)
         print(response)
         return response
+
 
     # Get the list of instructions we want to perform on the google account
     def get_list_of_instructions(self, message):
@@ -55,13 +43,13 @@ class LLMAgent:
             Do not add things like 'I need to do this' or 'do you need me to do this' \
             Do not add order numbers, bullet points, or any markdown format. Simply answer in plain english text. \
             Do not include instructions on credentials. \
-            You don't need steps about fetching time or location. All datetime in email is Los Angeles pacific timezone. In the code, convert the time to UTC time. \
+            You don't need steps about fetching time or location. All datetime in email is Los Angeles pacific timezone. \
             Example prompt: Delete a calendar event tomorrow at 9am and create a new one called 'meeting'. \
             Example answer: \
             Get the list of calendar events for tomorrow around 9am. \
             Delete the calendar event obtained from previous step, with start time at tomorrow 9am. \
             Create a new calendar event tomorrow at 9am with name 'meeting'. "
-        response = self.get_llm_response(system_msg, message)
+        response = self.query(system_msg, message, self.use_rag)
 
         # Parse the response into a list
         action_list = response.split("\n")
@@ -73,13 +61,14 @@ class LLMAgent:
 
     def get_service_code(self, message):
         system_msg = "You are an LLM agent that helps user generate function calls to Google API. \
-            Based on the user's (sender's) desired action on Google account, return a piece of code using Google HTTP API to perform the user-specified action. \
+            Based on the user's (sender's) desired action on Google account, return a piece of Python code using Google HTTP API to perform the user-specified action. \
             DO NOT use Google Python Client Library. \
-            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. In the code, convert the time to UTC time. \
+            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. Specify the timezone in datetime object. \
             Do not give instructions, do not give multiple outputs. \
+            Follow the params and body format in context. \
             "
         
-        response = self.get_llm_response(system_msg, message)
+        response = self.query(system_msg, message, self.use_rag)
 
         print("Code: ", response)
         return response
@@ -93,10 +82,12 @@ class LLMAgent:
             Example answer: https://www.googleapis.com/auth/calendar \
             "
         
-        response = self.get_llm_response(system_msg, message)
+        response = self.query(system_msg, message, self.use_rag)
+        lines = response.split("\n")
+        scope = [line for line in lines if "https://" in line][0].strip("`'")
 
-        print("Service Scope: ", response)
-        return response
+        print("Service Scope: ", scope)
+        return scope
 
 
     def get_service_api(self, message):
@@ -108,10 +99,12 @@ class LLMAgent:
             Example answer: https://www.googleapis.com/calendar/v3/calendars/primary/events \
             "
         
-        response = self.get_llm_response(system_msg, message)
-        print("Service API: ", response)
+        response = self.query(system_msg, message, self.use_rag)
+        lines = response.split("\n")
+        api = [line for line in lines if "https://" in line][0].strip("`'")
 
-        return response
+        print("Service API: ", api)
+        return api
 
 
     def get_service_method(self, message):
@@ -123,7 +116,7 @@ class LLMAgent:
             Example answer: POST \
             "
         
-        response = self.get_llm_response(system_msg, message)
+        response = self.query(system_msg, message, self.use_rag).split(" ")[0]
         print("Service Method: ", response)
 
         return response
@@ -135,12 +128,13 @@ class LLMAgent:
             Do not include the variable name, do not give instructions, do not include the variable name and the = sign, do not include any markdown format, just a plain python object of API call parameters. \
             If there's no params needed, simply give me a pair of curly braces representing the empty dictionary. \
             Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: FALSE \
+            Example answer: \{\} \
             Example prompt: Delete the calendar event tomorrow at 9am. Calendar ID: primary, Event ID: 12345 \
-            Example answer: {{'calendarId': 'primary', 'eventId': '12345'}} \
+            Example answer: \{'calendarId': 'primary', 'eventId': '12345'\} \
             "
         
-        response = self.get_llm_response(system_msg, message).strip("`")
+        response = self.query(system_msg, message, self.use_rag).strip("`")
+        # response = response.split("\n")[0]
         print("Service Params: ", response)
 
         return ast.literal_eval(response)
@@ -154,15 +148,16 @@ class LLMAgent:
             Do not give instructions, do not format the output, do not include the params for the function call, do not include any markdown format, just a plain python list of Google Python function names. \
             Do not include variable names. Change it into user information based on your knowledge. If nothing is known, use some default information. \
             Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: {{ \
+            Example answer: \{ \
                 'summary': 'Meeting', \
                 'description': 'description', \
-                'start': {{'dateTime': '2024-10-27T09:00:00+08:00'}}, \
-                'end': {{ 'dateTime': '2024-10-27T10:00:00+08:00'}} \
-            }} \
+                'start': \{'dateTime': '2024-10-27T09:00:00+08:00', 'timeZone': 'America/Los_Angeles'\}, \
+                'end': \{ 'dateTime': '2024-10-27T10:00:00+08:00', 'timeZone': 'America/Los_Angeles'\} \
+            \} \
             "
         
-        response = self.get_llm_response(system_msg, message).strip("`")
+        response = self.query(system_msg, message, self.use_rag).strip("`")
+        # response = response.split("\n")[0]
         print("Service Body: ", response)
 
         return ast.literal_eval(response)
@@ -193,38 +188,23 @@ class LLMAgent:
     
 
 def test_api_call_on_prompt():
+    from action_service import ActionService
     agent = LLMAgent()
         
-    message = "create a calendar event 'meeting' tomorrow at 9am. The google account is xisheng@ucsd.edu and use calendarId = primary"
+    message = "retrieve all my calendar events for today"
     # # message = "Delete my calendar event tomorrow at 9am, then create a new event at the same time called 'my meeting', invite jih119@ucsd.edu"
     # # message = "show me all my unread emails and reply them all with 'I'm not available right now'."
     api_calls = agent.get_api_calls(message)
 
-    try:
-        # Call the Calendar API
-        print("Calling the api")
-        match api_calls[0].method:
-            case 'GET':
-                response = requests.get(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
-            case 'POST':
-                response = requests.post(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
-            case 'PUT':
-                response = requests.put(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
-            case 'DELETE':
-                response = requests.delete(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
+    action_service = ActionService()
+    response = action_service.send_http_request(api_calls[0])
 
-        print(response.text)
-
-    except Exception as error:
-        print(f"An error occurred: {error}")
-
-    # while True:
-    #     message = input("You: ")
-    #     agent.chat(message)
 
 def test_api_call_on_email():
     from email_service import EmailService
     from data import GmailMessage
+    from action_service import ActionService
+
     send_from = "Xin Sheng <xisheng@ucsd.edu>"
     date = "Tue, 22 Oct 2024 15:10:32 -0700"
     send_to = "myprivagent@gmail.com"
@@ -233,23 +213,9 @@ def test_api_call_on_email():
     email_service = EmailService()
     prompt = email_service.generate_prompt(email)
     api_calls = email_service.send_message_to_llm_agent(prompt)
-    try:
-        # Call the Calendar API
-        print("Calling the api")
-        match api_calls[0].method:
-            case 'GET':
-                response = requests.get(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
-            case 'POST':
-                response = requests.post(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
-            case 'PUT':
-                response = requests.put(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
-            case 'DELETE':
-                response = requests.delete(api_calls[0].api, params=api_calls[0].params, headers=api_calls[0].headers, json=api_calls[0].body)
-
-        print(response.text)
-
-    except Exception as error:
-        print(f"An error occurred: {error}")
+    
+    action_service = ActionService()
+    response = action_service.send_http_request(api_calls[0])
 
 if __name__ == '__main__':
-    test_api_call_on_email()
+    test_api_call_on_prompt()
