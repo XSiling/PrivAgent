@@ -14,8 +14,9 @@ class EmailService:
     llm_agent = LLMAgent()
     gmail_configurations = GmailConfiguration()
 
-    def __init__(self, server_start_time):
+    def __init__(self, server_start_time, test_old_emails):
         self.server_start_time = server_start_time
+        self.test_old_emails = test_old_emails
         self.email_history = []
 
     # apply the possible rules to filter out the emails
@@ -30,7 +31,7 @@ class EmailService:
         send_from, date, send_to, content = "", "", "", ""
 
         # the email is sent before the server starts, ignore it
-        if float(internalDate) <= self.server_start_time:
+        if not self.test_old_emails and float(internalDate)/1000 <= self.server_start_time:
             return None
         
         # the email is already processed before, ignore it
@@ -54,10 +55,6 @@ class EmailService:
 
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
-        print("Send From: ", send_from)
-        print("Date: ", date)
-        print("Send To: ", send_to)
-        print("Content: ", content)
 
         gmail_message = GmailMessage(id, send_from, date, send_to, content)
 
@@ -84,7 +81,7 @@ class EmailService:
     def generate_prompt(self, message: GmailMessage):
         # TODO: Improve this
         prompt = "Sender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content)
-        print("Prompt: ", prompt)
+        print("Prompt: \n", prompt)
         return prompt
 
     def send_message_to_llm_agent(self, message: str):
