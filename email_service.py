@@ -79,7 +79,6 @@ class EmailService:
             filtered_msg = self.filter_message(msg)
             if filtered_msg != None:
                 messages.append(filtered_msg)
-                self.email_history.append(filtered_msg.id)
         return messages
     
     def generate_prompt(self, message: GmailMessage):
@@ -96,4 +95,20 @@ class EmailService:
         self.email_history.append(
             HistoryRecord(response, confirm_response)
         )
+
+    def get_history_as_string(self):
+        content = ""
+        for record in self.email_history:
+            record_string = ""
+            record_string += "scope: {}\t".format(" ".join(record.api_call.scope))
+            record_string += "api: {}\t".format(str(record.api_call.api))
+            record_string += "method: {}\t".format(str(record.api_call.method))
+            record_string += "headers: {}\t".format(str(record.api_call.headers))
+            record_string += "params: {}\t".format(str(record.api_call.params))
+            record_string += "body: {}\t".format(str(record.api_call.body))
+
+            record_string += "response: {}\t".format(str(record.http_response))
+            content += record_string 
+            content += "\n"
+        return content
 

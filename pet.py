@@ -4,6 +4,7 @@ import random
 from platform import system
 from app_pet import Server
 from tkinter.messagebox import askyesno
+from tkinter import filedialog
 import threading
 
 class Pet:
@@ -20,6 +21,7 @@ class Pet:
             "confirm":True,
             "pet_move":True,
         }
+        self.root.title("PrivAgent")
         self.current_mode = "pet"
 
         self.toggle_on_image = tkinter.PhotoImage(file=os.path.abspath("images/toggle_on.png")).subsample(10, 10)
@@ -68,6 +70,7 @@ class Pet:
         self.curr_width = screen_width-self.pixels_from_right
         self.curr_height = screen_height-self.pixels_from_bottom
         self.root.geometry('%dx%d+%d+%d' % (100, 100, self.curr_width, self.curr_height))
+        
         
         self.server_thread.start()
         
@@ -134,16 +137,18 @@ class Pet:
     
     def transform_pet_to_window(self):
         # transform the pet to window
+        # self.root.destroy()
         self.root.overrideredirect(False)
         self.root.attributes('-topmost', False)
         self.curr_width = 300
-        self.curr_height = 150
+        self.curr_height = 200
         ws = self.root.winfo_screenwidth()
         hs = self.root.winfo_screenheight()
         x = (ws/2) - (self.curr_width/2)
         y = (hs/2) - (self.curr_height/2)
 
-        self.root.geometry("%dx%d+%d+%d" % (300, 150, x, y))
+        self.root.geometry('%dx%d+%d+%d' % (self.curr_width, self.curr_height, x, y))
+        self.root.update_idletasks()
         self.label.destroy()
 
         self.window_frame = tkinter.Frame(self.root)
@@ -178,6 +183,11 @@ class Pet:
         self.mode_button.pack()
         self.mode_button_frame.pack()
 
+        self.log_download_button_frame = tkinter.Frame(self.window_frame, pady=10)
+        self.log_download_button = tkinter.Button(self.log_download_button_frame, text='Download Log', command=self.download_log)
+        self.log_download_button.pack()
+        self.log_download_button_frame.pack()
+
     def mouse_enter_button(self, button, button_name):
         print("mouse enter")
         if not self.configurations[button_name]:
@@ -187,6 +197,16 @@ class Pet:
         print("mouse leave")
         if not self.configurations[button_name]:
             button.image = self.toggle_off_image
+
+    def download_log(self):
+        history = self.server.email_service.get_history_as_string()
+        file_path = filedialog.asksaveasfilename(title="Save As", defaultextension=".txt", filetypes=[("All files", "*.*")])
+        if file_path:
+            try:
+                with open(file_path, 'wb') as file:
+                    file.write(str.encode(history))
+            except:
+                print("some error happenening in the download process")
 
     def transform_window_to_pet(self):
         # transform from the window to the pet
@@ -202,6 +222,7 @@ class Pet:
         self.confirm_button.destroy()
         self.pet_moving_button.destroy()
         self.mode_button.destroy()
+        self.confirm_button.destroy()
         self.window_frame.destroy()
         self.label = tkinter.Label(self.root,bd=0,bg='black') # borderless window
         self.label.pack()

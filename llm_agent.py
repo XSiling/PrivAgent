@@ -94,6 +94,7 @@ class LLMAgent:
             "
         
         response = self.get_llm_response(system_msg, message)
+        response = response.split(" ")[0]
 
         print("Service Scope: ", response)
         return response
