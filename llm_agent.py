@@ -82,9 +82,11 @@ class LLMAgent:
             Example answer: https://www.googleapis.com/auth/calendar \
             "
         
+
         response = self.query(system_msg, message, self.use_rag)
         lines = response.split("\n")
         scope = [line for line in lines if "https://" in line][0].strip("`'")
+
 
         print("Service Scope: ", scope)
         return scope
