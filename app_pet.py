@@ -49,7 +49,8 @@ class Server:
                 self.event_queue.put(ConfirmEvent(response))
                 confirm_response = self.handler_queue.get()
                 # confirm_response = self.confirm_service.get_confirmation(response)
-
+                http_request_response = False
+                
                 if confirm_response:
                     # send action to action service
                     http_request_response = self.action_service.send_http_request(response)
