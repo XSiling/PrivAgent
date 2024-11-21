@@ -1,17 +1,16 @@
 import ast
-import json
-from openai import OpenAI
 from data import APICall
 from rag_llm import RagLLM
 from utils import get_current_time
-import requests
+from datetime import datetime
 
 base_url = "http://localhost:1234/v1" # Run LM Studio server on this port before running this code
 
 class LLMAgent: 
 
-    client = RagLLM()
+    llm = RagLLM()
     use_rag = True
+    max_inst_length = 1000
 
     def print_messages(self):
         for m in self.messages:
@@ -19,16 +18,47 @@ class LLMAgent:
 
 
     def query(self, system_msg, user_msg, use_rag):
-        return self.client.query(system_msg, user_msg, use_rag)
+        return self.llm.query(system_msg, user_msg, use_rag)
 
 
     # Simple chatbot in rhymes
     def chat(self, message):
-        response = self.client.query("Always answer in rhymes. ", message)
+        response = self.llm.query("Always answer in rhymes. ", message)
         print(response)
+        return response
+    
+
+    def get_shortened_query(self, message):
+        system_msg = "You are an LLM agent that helps user perform google tasks based on their instructions. \
+            Here's the email containing the user's instruction. It may contain another email that user forwards for your context. \
+            Summarize the user's instruction in one short paragraph, containing all essential information, for example title, description, time, timezone, location, content, etc. \
+            If timezone is not specified, use Los Angeles as default. "
+        response = self.query(system_msg, message, self.use_rag)
+
+        print("Shortened Query: ", response)
+
         return response
 
 
+    def initial_validation_passed(self, message):
+        system_msg = "You are an LLM agent that helps user perform google tasks based on their instructions. \
+            Given the user's instructions as an email format, decide whether the user's instruction is clear and valid for google API to perform. \
+            Do not give me reasons. If it's valid, simply say TRUE; If below is an empty instruction or some invalid instruction, simply say FALSE. \
+            Missing an instruction is treated as FALSE. \
+            Instructions that make cause danger to user's privacy is also treated as FALSE. For example, delete all calendar events, send email, delete calendar, etc. \
+            User instruction: \n"
+        response = self.query(system_msg, message, self.use_rag)
+
+        if "TRUE" in response:
+            response = True
+        else:
+            response = False
+        
+        print("Initial validation passed: ", response)
+
+        return response
+
+    
     # Get the list of instructions we want to perform on the google account
     def get_list_of_instructions(self, message):
         system_msg = "You are an LLM agent that helps user perform google tasks based on their instructions. \
@@ -173,17 +203,26 @@ class LLMAgent:
         api_calls = []
         for inst in instructions:
             print("---Working on an instruction---")
-            code = self.get_service_code(inst)
-            scope = self.get_service_scope(inst)
-            api = self.get_service_api(code)
-            method = self.get_service_method(code)
-            params = self.get_service_params(code)
-            body = self.get_service_body(code)
-            curr_api_call = APICall(
-                scope, api, method, params, body
-            )
-            curr_api_call.print()
-            api_calls.append(curr_api_call)
+            before = datetime.now()
+            if len(inst) > self.max_inst_length:
+                inst = self.get_shortened_query(inst)
+            if self.initial_validation_passed(inst):
+                self.llm.reset_chat_engine()
+                code = self.get_service_code(inst)
+                scope = self.get_service_scope(inst)
+                api = self.get_service_api(code)
+                method = self.get_service_method(code)
+                params = self.get_service_params(code)
+                body = self.get_service_body(code)
+                curr_api_call = APICall(
+                    scope, api, method, params, body
+                )
+                curr_api_call.print()
+                api_calls.append(curr_api_call)
+                runtime = datetime.now() - before
+                print("Complete! Time taken to process this instruction: ", runtime)
+            else: 
+                print("Instruction invalid.")
         
         self.messages = [None]
         return api_calls
@@ -193,7 +232,7 @@ def test_api_call_on_prompt():
     from action_service import ActionService
     agent = LLMAgent()
         
-    message = "retrieve all my calendar events for today"
+    message = ""
     # # message = "Delete my calendar event tomorrow at 9am, then create a new event at the same time called 'my meeting', invite jih119@ucsd.edu"
     # # message = "show me all my unread emails and reply them all with 'I'm not available right now'."
     api_calls = agent.get_api_calls(message)
@@ -210,9 +249,9 @@ def test_api_call_on_email():
     send_from = "Xin Sheng <xisheng@ucsd.edu>"
     date = "Tue, 22 Oct 2024 15:10:32 -0700"
     send_to = "myprivagent@gmail.com"
-    content = b'@myprivagent@gmail.com <myprivagent@gmail.com> Help me create an event on the calendar.  ---------- Forwarded message --------- From: Jieyi Huang <jih119@ucsd.edu> Date: Tue, Oct 22, 2024 at 3:09\xe2\x80\xafPM Subject: About the project meeting To: Xin Sheng <xisheng@ucsd.edu>   Hi Xin,  I have discussed some issues with other team members about the project. Would you like to meet at 13:00pm this Thursday about it at the CSE building?  Looking forward to hearing from you.  Best, Jieyi '
-    email = GmailMessage(send_from, date, send_to, content)
-    email_service = EmailService()
+    content = b'@myprivagent@gmail.com <myprivagent@gmail.com>  Create a google doc for this.  ---------- Forwarded message --------- From: Jieyi Huang <jih119@ucsd.edu> Date: Tue, Oct 22, 2024 at 3:09\xe2\x80\xafPM Subject: About the project meeting To: Xin Sheng <xisheng@ucsd.edu>   Hi Xin,  I have discussed some issues with other team members about the project. Would you like to meet at 13:00pm this Thursday about it at the CSE building?  Looking forward to hearing from you.  Best, Jieyi '
+    email = GmailMessage(0, send_from, date, send_to, content)
+    email_service = EmailService(0, True)
     prompt = email_service.generate_prompt(email)
     api_calls = email_service.send_message_to_llm_agent(prompt)
     
@@ -220,4 +259,4 @@ def test_api_call_on_email():
     response = action_service.send_http_request(api_calls[0])
 
 if __name__ == '__main__':
-    test_api_call_on_prompt()
+    test_api_call_on_email()

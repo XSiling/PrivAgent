@@ -30,6 +30,7 @@ class Server:
     handler_queue: Queue
 
     server_start_time = None
+
     test_old_emails = True # Default should be False. Set this to true when testing with sent emails
     test_one_email_only = False # Default should be False. Set this to true when testing with only one email
 
@@ -110,7 +111,14 @@ class Server:
             else:
                 try:
                     prompt = self.email_service.generate_prompt(current_message)
-                    response = self.email_service.send_message_to_llm_agent(prompt)[0]
+                    response = self.email_service.send_message_to_llm_agent(prompt)
+                    
+                    # confirm the email passes initial validation
+                    if len(response) > 0: 
+                        response = response[0]
+                    else:
+                        print("This action is invalid. Moving to the next email. ")
+                        continue
 
                     # confirm from user
                     self.event_queue.put(ConfirmEvent(response))
