@@ -45,6 +45,7 @@ class LLMAgent:
             Given the user's instructions as an email format, decide whether the user's instruction is clear and valid for google API to perform. \
             Do not give me reasons. If it's valid, simply say TRUE; If below is an empty instruction or some invalid instruction, simply say FALSE. \
             Missing an instruction is treated as FALSE. \
+            Instructions that make cause danger to user's privacy is also treated as FALSE. For example, delete all calendar events, send email, delete calendar, etc. \
             User instruction: \n"
         response = self.query(system_msg, message, self.use_rag)
 
@@ -248,7 +249,7 @@ def test_api_call_on_email():
     send_from = "Xin Sheng <xisheng@ucsd.edu>"
     date = "Tue, 22 Oct 2024 15:10:32 -0700"
     send_to = "myprivagent@gmail.com"
-    content = b'@myprivagent@gmail.com <myprivagent@gmail.com>   ---------- Forwarded message --------- From: Jieyi Huang <jih119@ucsd.edu> Date: Tue, Oct 22, 2024 at 3:09\xe2\x80\xafPM Subject: About the project meeting To: Xin Sheng <xisheng@ucsd.edu>   Hi Xin,  I have discussed some issues with other team members about the project. Would you like to meet at 13:00pm this Thursday about it at the CSE building?  Looking forward to hearing from you.  Best, Jieyi '
+    content = b'@myprivagent@gmail.com <myprivagent@gmail.com>  Create a google doc for this.  ---------- Forwarded message --------- From: Jieyi Huang <jih119@ucsd.edu> Date: Tue, Oct 22, 2024 at 3:09\xe2\x80\xafPM Subject: About the project meeting To: Xin Sheng <xisheng@ucsd.edu>   Hi Xin,  I have discussed some issues with other team members about the project. Would you like to meet at 13:00pm this Thursday about it at the CSE building?  Looking forward to hearing from you.  Best, Jieyi '
     email = GmailMessage(0, send_from, date, send_to, content)
     email_service = EmailService(0, True)
     prompt = email_service.generate_prompt(email)
