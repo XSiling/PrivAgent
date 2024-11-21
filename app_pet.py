@@ -31,7 +31,7 @@ class Server:
 
     server_start_time = None
     test_old_emails = True # Default should be False. Set this to true when testing with sent emails
-    test_one_email_only = True # Default should be False. Set this to true when testing with only one email
+    test_one_email_only = False # Default should be False. Set this to true when testing with only one email
 
     gmail_lock: Lock
 
@@ -82,8 +82,15 @@ class Server:
             time.sleep(20)
 
     def fetch_email(self):
+        if self.test_old_emails:
+            fetch_start_timestamp = 1
+        else:
+            fetch_start_timestamp = time.time()
+
         while True:
-            new_messages = self.email_service.retrieve_messages()
+            current_timestamp = time.time()
+            new_messages = self.email_service.retrieve_messages(fetch_start_timestamp)
+            fetch_start_timestamp = current_timestamp
             self.gmail_lock.acquire()
             self.email_processing_queue += new_messages
             self.gmail_lock.release()
@@ -101,24 +108,27 @@ class Server:
             if current_message == None:
                 time.sleep(0.5)
             else:
-                prompt = self.email_service.generate_prompt(current_message)
-                response = self.email_service.send_message_to_llm_agent(prompt)[0]
+                try:
+                    prompt = self.email_service.generate_prompt(current_message)
+                    response = self.email_service.send_message_to_llm_agent(prompt)[0]
 
-                # confirm from user
-                self.event_queue.put(ConfirmEvent(response))
-                confirm_response = self.handler_queue.get()
-                # confirm_response = self.confirm_service.get_confirmation(response)
-                http_request_response = False
-                
-                if confirm_response:
-                    # send action to action service
-                    http_request_response = self.action_service.send_http_request(response)
-                    print("has done the action")
-                # send history to LLM
-                self.email_service.save_history(response, http_request_response)
+                    # confirm from user
+                    self.event_queue.put(ConfirmEvent(response))
+                    confirm_response = self.handler_queue.get()
+                    # confirm_response = self.confirm_service.get_confirmation(response)
+                    http_request_response = False
+                    
+                    if confirm_response:
+                        # send action to action service
+                        http_request_response = self.action_service.send_http_request(response)
+                        print("has done the action")
+                    # send history to LLM
+                    self.email_service.save_history(response, http_request_response)
 
-                if self.test_one_email_only:
-                    return
+                    if self.test_one_email_only:
+                        return
+                except Exception as error:
+                    print(f"An error occurred: {error}")
             
     def run_server(self):
         self.fetch_email_thread.start()

@@ -83,11 +83,9 @@ class EmailService:
 
         return gmail_message
     
-    def retrieve_messages(self):
+    def retrieve_messages(self, start_timestamp):
         service = self.gmail_service.get_service()
-
-        # currently just get all the messages at a time
-        results = service.users().messages().list(userId='me', labelIds=['INBOX']).execute()
+        results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=f"after:{start_timestamp}").execute()
         messageIds = results.get('messages',[])
         messages = []
         for messageId in messageIds:
