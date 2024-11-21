@@ -37,6 +37,7 @@ def get_calendar_events_with_python_library():
   """Shows basic usage of the Google Calendar API.
   Prints the start and name of the next 10 events on the user's calendar.
   """
+  SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
   creds = get_token(SCOPES)
   
   try:
@@ -163,6 +164,24 @@ def create_doc_with_http_api():
         print(f"An error occurred: {error}")
 
 
+def get_cal_events_with_http_api():
+
+    try:
+        print("Getting calendar events")
+        headers = {
+            'Content-Type': 'application/json', 
+            'Authorization': 'Bearer ya29.a0AeDClZBo-SnrW8t_MQofNaGwN2E59YPtdhvU7OcaiUE81y-dgMrQE_9lKUzxv1ZtzNSev9P_1bnXRuyMc3YKuwtLgrn8eTFTRCrY_wcAFy_nSvw7N7yb3dys2nqZPGxCPxTANjN22R4h2lnQ4hjLGWlwha0Pub8DVVOhP6dmaCgYKAQoSARASFQHGX2Mi4x4qfVzryzbxKrHRgdZ4fw0175'
+        }
+        params = None
+        body = None
+        response = requests.get("https://www.googleapis.com/calendar/v3/calendars/primary/events", params=params, headers=headers, json=body)
+
+        print(response.text)
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
+
 if __name__ == '__main__':
-    # print(get_token("https://www.googleapis.com/auth/calendar.events").token)
-    create_calendar_event_with_http_api()
+    # print(get_token("https://www.googleapis.com/auth/calendar.readonly").token)
+    get_cal_events_with_http_api()

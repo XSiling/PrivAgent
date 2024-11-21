@@ -66,6 +66,8 @@ class RagLLM:
             model_name="meta-llama-3.1-8b-instruct",
             base_url=self.base_url,
             temperature=0.1,
+            context_window=8192,
+            request_timeout=60,
         )
 
         # ====== Setup a query engine on the index previously created ======
@@ -90,6 +92,11 @@ class RagLLM:
         self.query_engine_without_rag = index.as_chat_engine(chat_mode="condense_question")
 
         print("Initialized.")
+
+
+    def reset_chat_engine(self):
+        self.query_engine_with_rag.reset()
+        self.query_engine_without_rag.reset()
 
 
     def query(self, system_prompt, query_prompt, use_rag=True):

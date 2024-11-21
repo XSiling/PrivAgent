@@ -3,7 +3,7 @@ UCSD Fall 2024 CSE 227 Course Project
 
 Authors: Jieyi Huang, Xin Sheng
 ## Getting started
-* For the LM Studio, run models `meta-llama-3.1-8b-instruct` and `nomic-embed-text-v1.5`
+* For the LM Studio, run models `meta-llama-3.1-8b-instruct` and `nomic-embed-text-v1.5`. To stably process long emails, raise the Llama model context length to 8192. 
 * To set up Environment, make sure anaconda or miniconda is installed on device, then in the desired environment run in terminal: 
 ```
 conda install --file requirements.txt

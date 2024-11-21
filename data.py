@@ -47,8 +47,8 @@ class APICall:
             'Content-Type': 'application/json',
             'Authorization': ''
         }
-        self.params = params
-        self.body = body
+        self.params = params if params != {} else None
+        self.body = body if body != {} else None
 
     def print(self):
         print("API: ", self.api)

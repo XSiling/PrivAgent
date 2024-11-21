@@ -24,6 +24,7 @@ class Server:
     handler_queue: Queue
 
     server_start_time = None
+
     test_old_emails = True # Default should be False. Set this to true when testing with sent emails
     test_one_email_only = True # Default should be False. Set this to true when testing with only one email
 
@@ -43,7 +44,11 @@ class Server:
             for message in new_messages:
                 # send prompt to LLM
                 prompt = self.email_service.generate_prompt(message)
-                response = self.email_service.send_message_to_llm_agent(prompt)[0]
+                response = self.email_service.send_message_to_llm_agent(prompt)
+                if len(response) > 0:
+                    response = response[0]
+                else: 
+                    continue
 
                 # confirm from user
                 self.event_queue.put(ConfirmEvent(response))
