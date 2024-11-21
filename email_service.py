@@ -19,15 +19,38 @@ class EmailService:
         self.test_old_emails = test_old_emails
         self.email_history = []
 
+
+    def extract_message_content(self, payload):
+        mime_type = payload['mimeType']
+        recursive_type = ['multipart/mixed', 'multipart/alternative']
+        direct_process_type = ['text/plain']
+        ignore_type = ['text/html']
+
+        total_content = ""
+        if mime_type in recursive_type:
+            parts = payload['parts']
+            for part in parts:
+                content = self.extract_message_content(part)
+                total_content += content
+
+        if mime_type in direct_process_type:
+            content = payload['body']['data']
+            total_content += content
+
+        if mime_type in ignore_type:
+            pass
+
+        return total_content
+    
     # apply the possible rules to filter out the emails
     # 1. only allow those are in the whitelist to send the emails
     # 2. extract the format from the internal Gmail to GmailMessage
     def filter_message(self, msg):
+        # import pdb;pdb.set_trace()
         internalDate = msg['internalDate']
         id = msg['id']
         payload = msg['payload']
         headers = payload['headers']
-        parts = payload['parts']
         send_from, date, send_to, content = "", "", "", ""
 
         # the email is sent before the server starts, ignore it
@@ -37,7 +60,7 @@ class EmailService:
         # the email is already processed before, ignore it
         if id in self.email_history:
             return None
-
+        
         for header in headers:
             if header['name'] == SEND_FROM_KEY:
                 send_from = header['value']
@@ -48,27 +71,21 @@ class EmailService:
             if header['name'] == SEND_TO_KEY:
                 send_to = header['value']
 
-        for part in parts:
-            if part['mimeType'] == 'text/plain':
-                data = part['body']['data']
-                content += data
-
+        email_address = extract_email_address_from_sender(send_from)
+        if email_address not in self.gmail_configurations.email_whitelist:
+            return None
+        
+        content = self.extract_message_content(payload)
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
 
         gmail_message = GmailMessage(id, send_from, date, send_to, content)
 
-        email_address = extract_email_address_from_sender(gmail_message.send_from)
-        if email_address not in self.gmail_configurations.email_whitelist:
-            return None
-
         return gmail_message
     
-    def retrieve_messages(self):
+    def retrieve_messages(self, start_timestamp):
         service = self.gmail_service.get_service()
-
-        # currently just get all the messages at a time
-        results = service.users().messages().list(userId='me', labelIds=['INBOX']).execute()
+        results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=f"after:{start_timestamp}").execute()
         messageIds = results.get('messages',[])
         messages = []
         for messageId in messageIds:

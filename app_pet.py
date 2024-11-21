@@ -4,7 +4,13 @@ from email_service import EmailService
 from action_service import ActionService
 from confirm_service import ConfirmService
 from queue import Queue
-from data import APICall
+from data import APICall, GmailMessage
+from threading import Lock
+import threading
+from typing import List
+from collections import defaultdict
+import random
+
 # continuously running the backend server, including:
 # for certain period:
 #   retrieve the information
@@ -25,7 +31,15 @@ class Server:
 
     server_start_time = None
     test_old_emails = True # Default should be False. Set this to true when testing with sent emails
-    test_one_email_only = True # Default should be False. Set this to true when testing with only one email
+    test_one_email_only = False # Default should be False. Set this to true when testing with only one email
+
+    gmail_lock: Lock
+
+    # the current queue to process the email
+    email_processing_queue: List[GmailMessage]
+
+    fetch_email_thread: threading.Thread
+    process_email_thread: threading.Thread
 
     def __init__(self):
         self.server_start_time = time.time()
@@ -34,34 +48,92 @@ class Server:
         self.confirm_service = ConfirmService()
         self.event_queue = Queue()
         self.handler_queue = Queue()
+        self.gmail_lock = Lock()
+        
+        self.email_processing_queue = []
+        
+        self.fetch_email_thread = threading.Thread(target = self.fetch_email)
+        self.process_email_thread = threading.Thread(target = self.process_email)
+        self.schedule_email_thread = threading.Thread(target = self.schedule_email)
 
-    def run_server(self):
+    def schedule_email(self):
+        # schedule the current email
+        # current scheduling policy: lottery for each user, for one user, the emails remain the time order
         while True:
-            # retrive message from email server
-            new_messages = self.email_service.retrieve_messages()
+            self.gmail_lock.acquire()
+            user_email_dict = defaultdict(list)
+            scheduled_email_processing_queue = []
 
-            for message in new_messages:
-                # send prompt to LLM
-                prompt = self.email_service.generate_prompt(message)
-                response = self.email_service.send_message_to_llm_agent(prompt)[0]
+            for email in self.email_processing_queue:
+                user = email.send_from
+                user_email_dict[user].append(email)
 
-                # confirm from user
-                self.event_queue.put(ConfirmEvent(response))
-                confirm_response = self.handler_queue.get()
-                # confirm_response = self.confirm_service.get_confirmation(response)
+            while len(user_email_dict.keys()) != 0:
+                lottery_user = random.choice(list(user_email_dict.keys()))
+                lottery_email = user_email_dict[lottery_user].pop(0)
+                scheduled_email_processing_queue.append(lottery_email)
 
-                if confirm_response:
-                    # send action to action service
-                    http_request_response = self.action_service.send_http_request(response)
-                    print("has done the action")
-                # send history to LLM
-                self.email_service.save_history(response, http_request_response)
+                if len(user_email_dict[lottery_user]) == 0:
+                    user_email_dict.pop(lottery_user)
 
-                if self.test_one_email_only:
-                    return
+            self.email_processing_queue = scheduled_email_processing_queue
 
-            time.sleep(2)
+            self.gmail_lock.release()
+            time.sleep(20)
 
+    def fetch_email(self):
+        if self.test_old_emails:
+            fetch_start_timestamp = 1
+        else:
+            fetch_start_timestamp = time.time()
+
+        while True:
+            current_timestamp = time.time()
+            new_messages = self.email_service.retrieve_messages(fetch_start_timestamp)
+            fetch_start_timestamp = current_timestamp
+            self.gmail_lock.acquire()
+            self.email_processing_queue += new_messages
+            self.gmail_lock.release()
+            time.sleep(10)
+
+    def process_email(self):
+        while True:
+            self.gmail_lock.acquire()
+            if len(self.email_processing_queue) == 0:
+                current_message = None
+            else:
+                current_message = self.email_processing_queue.pop(0)
+            self.gmail_lock.release()
+
+            if current_message == None:
+                time.sleep(0.5)
+            else:
+                try:
+                    prompt = self.email_service.generate_prompt(current_message)
+                    response = self.email_service.send_message_to_llm_agent(prompt)[0]
+
+                    # confirm from user
+                    self.event_queue.put(ConfirmEvent(response))
+                    confirm_response = self.handler_queue.get()
+                    # confirm_response = self.confirm_service.get_confirmation(response)
+                    http_request_response = False
+                    
+                    if confirm_response:
+                        # send action to action service
+                        http_request_response = self.action_service.send_http_request(response)
+                        print("has done the action")
+                    # send history to LLM
+                    self.email_service.save_history(response, http_request_response)
+
+                    if self.test_one_email_only:
+                        return
+                except Exception as error:
+                    print(f"An error occurred: {error}")
+            
+    def run_server(self):
+        self.fetch_email_thread.start()
+        self.process_email_thread.start()
+        self.schedule_email_thread.start()
 
 if __name__ == '__main__':
     server = Server()
