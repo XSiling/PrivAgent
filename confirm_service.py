@@ -11,8 +11,7 @@ class ConfirmService:
         method = llm_response.method
         params = llm_response.params
         body = llm_response.body
-        text = "<Action Confirmation>\nWe will try to send a " + method + " request to: " + api + \
+        text = "We will try to send a " + method + " request to: " + api + \
             ". \nThe params: " + str(params) + "\nThe body: " + str(body)
-        text += ".\nIf you confirm this is correct, please input 1. Otherwise input 0 or else.\nResponse:"
         return text
         
