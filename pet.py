@@ -4,8 +4,9 @@ import random
 from platform import system
 from app_pet import Server
 from tkinter.messagebox import askyesno
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 import threading
+from data import TokenExpirationPolicy
 
 class Pet:
     def __init__(self):
@@ -23,6 +24,28 @@ class Pet:
         }
         self.root.title("PrivAgent")
         self.current_mode = "pet"
+
+        self.expiration_setting_var = tkinter.StringVar()
+        self.expiration_setting_choices = (
+            "Expired at once",
+            "Expired after 1 time",
+            "Expired after 2 times",
+            "Expired after 5 times",
+            "Expired after 10 times",
+            "Expired after 1 hour",
+            "Expired after 2 hours"
+        )
+        self.expiration_choice_index = 0
+
+        self.expiration_setting_map = [
+            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 1, 0],
+            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 2, 0],
+            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 3, 0],
+            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 6, 0],
+            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 11, 0],
+            [TokenExpirationPolicy.EXPIRE_AFTER_TIME, 1, 3600],
+            [TokenExpirationPolicy.EXPIRE_AFTER_TIME, 1, 7200]
+        ]
 
         self.toggle_on_image = tkinter.PhotoImage(file=os.path.abspath("images/toggle_on.png")).subsample(10, 10)
         self.toggle_off_image = tkinter.PhotoImage(file=os.path.abspath("images/toggle_off.png")).subsample(10, 10)
@@ -141,7 +164,7 @@ class Pet:
         self.root.overrideredirect(False)
         self.root.attributes('-topmost', False)
         self.curr_width = 300
-        self.curr_height = 200
+        self.curr_height = 230
         ws = self.root.winfo_screenwidth()
         hs = self.root.winfo_screenheight()
         x = (ws/2) - (self.curr_width/2)
@@ -178,6 +201,15 @@ class Pet:
         self.pet_moving_button.pack(side='right', padx=10)
         self.pet_moving_frame.pack()
 
+        self.expiration_setting_frame = tkinter.Frame(self.window_frame, pady=10)
+        self.expiration_setting_combobox = ttk.Combobox(self.expiration_setting_frame, values=self.expiration_setting_choices)
+        self.expiration_setting_combobox.current(self.expiration_choice_index)
+        self.expiration_setting_combobox.pack(side='left')
+        self.expiration_setting_confirm_button = tkinter.Button(self.expiration_setting_frame, text='Confirm', command=self.confirm_expiration_setting, padx=10)
+        self.expiration_setting_confirm_button.pack(side='right')
+        self.expiration_setting_frame.pack()
+        
+        #----------------------------------------------------
         self.mode_button_frame = tkinter.Frame(self.window_frame, pady=10)
         self.mode_button = tkinter.Button(self.mode_button_frame, text='Return To Pet Mode', command=self.transform_window_to_pet)
         self.mode_button.pack()
@@ -187,6 +219,15 @@ class Pet:
         self.log_download_button = tkinter.Button(self.log_download_button_frame, text='Download Log', command=self.download_log)
         self.log_download_button.pack()
         self.log_download_button_frame.pack()
+
+
+    def confirm_expiration_setting(self):
+        current_index = self.expiration_setting_combobox.current()
+        if current_index != self.expiration_choice_index:
+            policy, token_times, token_time = self.expiration_setting_map[current_index]
+            self.server.action_service.set_policy(policy, token_times, token_time)
+            self.expiration_setting_combobox.current(current_index)
+            self.expiration_choice_index = current_index
 
     def mouse_enter_button(self, button, button_name):
         print("mouse enter")
