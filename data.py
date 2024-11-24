@@ -4,7 +4,13 @@ from requests.models import Response
 class GmailConfiguration:
     email_whitelist = ["jih119@ucsd.edu", "xisheng@ucsd.edu"]
 
+class TokenExpirationPolicy(Enum):
+    # expire in certain times
+    EXPIRE_IN_TIMES = "expire_in_times"
 
+    # expire after certain time period
+    EXPIRE_AFTER_TIME = "expire_after_time"
+    
 class GmailMessage:
     id = ""
     send_from = ""
