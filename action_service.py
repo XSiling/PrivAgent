@@ -131,13 +131,13 @@ class ActionService:
             print("Calling the api")
             match api_call.method:
                 case 'GET':
-                    response = requests.get(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
+                    response = requests.get(api_call.api, params=api_call.params, headers=api_call.headers)
                 case 'POST':
                     response = requests.post(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
                 case 'PUT':
                     response = requests.put(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
                 case 'DELETE':
-                    response = requests.delete(api_call.api, params=api_call.params, headers=api_call.headers, json=api_call.body)
+                    response = requests.delete(api_call.api, params=api_call.params, headers=api_call.headers)
             print(response.text)
             return response
         except Exception as error:

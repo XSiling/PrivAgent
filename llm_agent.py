@@ -93,7 +93,8 @@ class LLMAgent:
         system_msg = "You are an LLM agent that helps user generate function calls to Google API. \
             Based on the user's (sender's) desired action on Google account, return a piece of Python code using Google HTTP API to perform the user-specified action. \
             DO NOT use Google Python Client Library. \
-            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. Specify the timezone in datetime object. \
+            Use time in the date of original forwarded email. All datetime in email is Los Angeles pacific timezone. Specify the timezone. \
+            Do not write time as variables. Directly write them as strings in params and body object. \
             Do not give instructions, do not give multiple outputs. \
             Follow the params and body format in context. \
             "
@@ -108,8 +109,6 @@ class LLMAgent:
         system_msg = "You are an LLM agent that helps user generate function calls to Google Python Client Library. \
             Based on the user's desired action on Google account and the above generated service name, return one line of the minimal Google API authentication scope of the user-specified instruction\" \
             Do not give instructions, do not format the output, do not include http params, do not include sentences like 'the scope is xxx', just a plain Google API scope string. \
-            Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: https://www.googleapis.com/auth/calendar \
             "
         
 
@@ -127,8 +126,6 @@ class LLMAgent:
             Based on the user's desired action on their Google account and the above generated code, \
             return in one line the Google API we need to call in order to perform the user-specified instruction. \
             Do not give instructions, do not format the output, do not include the params for the function call, do not include params in the link, just a plain API link. \
-            Example prompt: Create a calendar event tomorrow at 9am. Calendar ID: primary \
-            Example answer: https://www.googleapis.com/calendar/v3/calendars/primary/events \
             "
         
         response = self.query(system_msg, message, self.use_rag)
@@ -144,8 +141,6 @@ class LLMAgent:
             Based on the user's desired action on their Google account and the above generated code, \
             return in one word the HTTP method of the Google API we need to call in order to perform the user-specified instruction\" \
             Do not give instructions, do not format the output, do not include the params for the function call, just a plain API link. \
-            Example prompt: Create a calendar event tomorrow at 9am. Calendar ID: primary \
-            Example answer: POST \
             "
         
         response = self.query(system_msg, message, self.use_rag).split(" ")[0]
@@ -159,10 +154,6 @@ class LLMAgent:
             Extract the 'params' variable in the above generated code, and return it in one line as a valid python dictionary. \
             Do not include the variable name, do not give instructions, do not include the variable name and the = sign, do not include any markdown format, just a plain python object of API call parameters. \
             If there's no params needed, simply give me a pair of curly braces representing the empty dictionary. \
-            Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: \{\} \
-            Example prompt: Delete the calendar event tomorrow at 9am. Calendar ID: primary, Event ID: 12345 \
-            Example answer: \{'calendarId': 'primary', 'eventId': '12345'\} \
             "
         
         response = self.query(system_msg, message, self.use_rag).strip("`")
@@ -179,13 +170,6 @@ class LLMAgent:
             If there's no body or data needed, simply give me a pair of curly braces representing the empty dictionary. \
             Do not give instructions, do not format the output, do not include the params for the function call, do not include any markdown format, just a plain python list of Google Python function names. \
             Do not include variable names. Change it into user information based on your knowledge. If nothing is known, use some default information. \
-            Example prompt: Create a calendar event tomorrow at 9am. \
-            Example answer: \{ \
-                'summary': 'Meeting', \
-                'description': 'description', \
-                'start': \{'dateTime': '2024-10-27T09:00:00+08:00', 'timeZone': 'America/Los_Angeles'\}, \
-                'end': \{ 'dateTime': '2024-10-27T10:00:00+08:00', 'timeZone': 'America/Los_Angeles'\} \
-            \} \
             "
         
         response = self.query(system_msg, message, self.use_rag).strip("`")

@@ -13,7 +13,7 @@ def display_gmail_message(msg: GmailMessage):
     print("Send to:", msg.send_to)
     print("Content:", msg.content)
 
-def display_gmail_messages(msg_list: [GmailMessage]):
+def display_gmail_messages(msg_list: list[GmailMessage]):
     for msg in msg_list:
         display_gmail_message(msg)
 

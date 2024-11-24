@@ -4,10 +4,6 @@ from requests.models import Response
 class GmailConfiguration:
     email_whitelist = ["jih119@ucsd.edu", "xisheng@ucsd.edu"]
 
-
-class ActionServiceName(Enum):
-    CALENDAR = "calendar"
-
 class TokenExpirationPolicy(Enum):
     # expire in certain times
     EXPIRE_IN_TIMES = "expire_in_times"
@@ -54,7 +50,7 @@ class APICall:
             'Authorization': ''
         }
         self.params = params if params != {} else None
-        self.body = body if body != {} else None
+        self.body = body if self.method in [HTTPMethod.POST, HTTPMethod.PUT] and body != {} else None
 
     def print(self):
         print("API: ", self.api)
@@ -70,3 +66,12 @@ class HistoryRecord:
     def __init__(self, api_call: APICall, http_response:Response):
         self.api_call = api_call
         self.http_response = http_response
+
+
+class ValidationConfiguration:
+    create_calendar_event = (HTTPMethod.POST, "https://www.googleapis.com/calendar/v3/calendars/primary/events")
+    create_doc = (HTTPMethod.POST, "https://docs.googleapis.com/v1/documents")
+    create_sheet = (HTTPMethod.POST, "https://sheets.googleapis.com/v4/spreadsheets")
+    get_calendar_events = (HTTPMethod.GET, "https://www.googleapis.com/calendar/v3/calendars/primary/events")
+
+    api_whitelist = [create_calendar_event, create_doc, create_sheet, get_calendar_events]
