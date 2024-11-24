@@ -67,7 +67,7 @@ class RagLLM:
             base_url=self.base_url,
             temperature=0.1,
             context_window=8192,
-            request_timeout=60,
+            request_timeout=120,
         )
 
         # ====== Setup a query engine on the index previously created ======
@@ -80,7 +80,7 @@ class RagLLM:
                     "---------------------\n"
                     "{context_str}\n"
                     "---------------------\n"
-                    "Given the context information above I want you to answer the following question in a crisp manner. Prioritize the context over chat history. \n"
+                    "Given the context information above I want you to answer the following question in a crisp manner. \n"
                     "{query_str}\n"
                     "Answer: "
                     )
@@ -88,8 +88,8 @@ class RagLLM:
         qa_prompt_tmpl = PromptTemplate(qa_prompt_tmpl_str_with_rag)
 
         # Do not use query engine as it can't save history easily
-        self.query_engine_with_rag = index.as_chat_engine(chat_mode="condense_plus_context", context_prompt=qa_prompt_tmpl)
-        self.query_engine_without_rag = index.as_chat_engine(chat_mode="condense_question")
+        self.query_engine_with_rag = index.as_chat_engine(chat_mode="context", context_prompt=qa_prompt_tmpl)
+        self.query_engine_without_rag = index.as_chat_engine(chat_mode="best")
 
         print("Initialized.")
 

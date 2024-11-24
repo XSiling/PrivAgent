@@ -3,6 +3,7 @@ from tool import display_gmail_messages
 from email_service import EmailService
 from action_service import ActionService
 from confirm_service import ConfirmService
+from validation_service import ValidationService
 from queue import Queue
 from data import APICall, GmailMessage
 from threading import Lock
@@ -25,6 +26,7 @@ class Server:
     email_service: EmailService
     action_service: ActionService
     confirm_service: ConfirmService
+    validation_service: ValidationService
 
     event_queue: Queue
     handler_queue: Queue
@@ -47,6 +49,7 @@ class Server:
         self.email_service = EmailService(self.server_start_time, self.test_old_emails)
         self.action_service = ActionService()
         self.confirm_service = ConfirmService()
+        self.validation_service = ValidationService()
         self.event_queue = Queue()
         self.handler_queue = Queue()
         self.gmail_lock = Lock()
@@ -114,11 +117,12 @@ class Server:
                     response = self.email_service.send_message_to_llm_agent(prompt)
                     
                     # confirm the email passes initial validation
-                    if len(response) > 0: 
-                        response = response[0]
-                    else:
-                        print("This action is invalid. Moving to the next email. ")
-                        continue
+                    self.validation_service.check_response_not_empty(response)
+
+                    response = response[0]
+                    
+                    # confirm the api call is allowed in the whitelist
+                    self.validation_service.check_api_in_whitelist(response)
 
                     # confirm from user
                     self.event_queue.put(ConfirmEvent(response))
