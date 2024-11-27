@@ -114,31 +114,26 @@ class Server:
             else:
                 try:
                     prompt = self.email_service.generate_prompt(current_message)
-                    response = self.email_service.send_message_to_llm_agent(prompt)
+                    response: list[APICall] = self.email_service.send_message_to_llm_agent(prompt)
                     
-                    # confirm the email passes initial validation
-                    self.validation_service.check_response_not_empty(response)
-
-                    response = response[0]
+                    import pdb;pdb.set_trace()
                     
-                    # confirm the api call is allowed in the whitelist
-                    self.validation_service.check_api_in_whitelist(response)
+                    self.validation_service.validate_response(response)
 
-                    # confirm from user
-                    self.event_queue.put(ConfirmEvent(response))
-                    confirm_response = self.handler_queue.get()
-                    # confirm_response = self.confirm_service.get_confirmation(response)
-                    http_request_response = False
+                    for api_call in response:
+                        self.event_queue.put(ConfirmEvent(api_call))
+                        confirm_response = self.handler_queue.get()
+                        http_request_response = False
+
+                        if confirm_response:
+                            http_request_response = self.action_service.send_http_request(api_call, current_message)
+                            print("has done the action")
+                        
+                        self.email_service.save_history(api_call, http_request_response)
                     
-                    if confirm_response:
-                        # send action to action service
-                        http_request_response = self.action_service.send_http_request(response, current_message)
-                        print("has done the action")
-                    # send history to LLM
-                    self.email_service.save_history(response, http_request_response)
-
                     if self.test_one_email_only:
                         return
+
                 except Exception as error:
                     print(f"An error occurred: {error}")
             
