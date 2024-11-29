@@ -310,6 +310,13 @@ class Pet:
             self.offset_x = event.x
             self.offset_y = event.y
 
+        if len(self.unsolved_event) == 0:
+            print("detected left click, nothing happened")
+        else:
+            event = self.unsolved_event.pop(0)
+            answer = askyesno(message = self.server.confirm_service.get_confirmation_text(event.message))
+            self.server.handler_queue.put(answer)
+
     def drag(self, event):
         if self.current_mode == "pet" and self.is_dragging:
             new_x = self.root.winfo_pointerx() - self.offset_x

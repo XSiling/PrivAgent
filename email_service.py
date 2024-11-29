@@ -47,9 +47,9 @@ class EmailService:
     # 1. only allow those are in the whitelist to send the emails
     # 2. extract the format from the internal Gmail to GmailMessage
     def filter_message(self, msg):
-        # import pdb;pdb.set_trace()
         internalDate = msg['internalDate']
         id = msg['id']
+        thread_id = msg['threadId']
         payload = msg['payload']
         headers = payload['headers']
         send_from, date, send_to, content = "", "", "", ""
@@ -80,7 +80,7 @@ class EmailService:
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
 
-        gmail_message = GmailMessage(id, send_from, date, send_to, content)
+        gmail_message = GmailMessage(id, thread_id, send_from, date, send_to, content)
 
         return gmail_message
     
@@ -117,6 +117,7 @@ class EmailService:
             record_string = ""
             if record.gmail_message: 
                 record_string += "gmail id: {}\t".format(str(record.gmail_message.id))
+                record_string += "gmail thread id:{}\t".format(str(record.gmail_message.thread_id))
                 record_string += "gmail send from: {}\t".format(str(record.gmail_message.send_from))
                 record_string += "gmail date: {}\t".format(str(record.gmail_message.date))
                 record_string += "send to: {}\t".format(str(record.gmail_message.send_to))
@@ -129,7 +130,7 @@ class EmailService:
                 record_string += "params: {}\t".format(str(record.api_call.params))
                 record_string += "body: {}\t".format(str(record.api_call.body))
             if record.http_response: 
-                record_string += "response: {}\t".format(str(record.http_response))
+                record_string += "response: {}\t".format(str(record.http_response.text))
             if record.error:
                 record_string += "error: {}\t".format(str(record.error))
             content += record_string 

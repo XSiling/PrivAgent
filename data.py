@@ -13,13 +13,15 @@ class TokenExpirationPolicy(Enum):
     
 class GmailMessage:
     id = ""
+    thread_id = ""
     send_from = ""
     date = ""
     send_to = ""
     content = ""
 
-    def __init__(self, id, send_from, date, send_to, content):
+    def __init__(self, id, thread_id, send_from, date, send_to, content):
         self.id = id
+        self.thread_id = thread_id
         self.send_from = send_from
         self.date = date
         self.send_to = send_to
