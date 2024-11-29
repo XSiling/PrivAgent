@@ -115,9 +115,6 @@ class Server:
                 try:
                     prompt = self.email_service.generate_prompt(current_message)
                     response: list[APICall] = self.email_service.send_message_to_llm_agent(prompt)
-                    
-                    import pdb;pdb.set_trace()
-                    
                     self.validation_service.validate_response(response)
 
                     for api_call in response:
@@ -129,12 +126,13 @@ class Server:
                             http_request_response = self.action_service.send_http_request(api_call, current_message)
                             print("has done the action")
                         
-                        self.email_service.save_history(api_call, http_request_response)
+                        self.email_service.save_history(current_message, api_call, http_request_response)
                     
                     if self.test_one_email_only:
                         return
 
                 except Exception as error:
+                    self.email_service.save_history(current_message, None, None, error)
                     print(f"An error occurred: {error}")
             
     def run_server(self):

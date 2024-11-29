@@ -60,12 +60,16 @@ class APICall:
         print("Body: ", self.body)
 
 class HistoryRecord:
+    gmail_message: GmailMessage
     api_call: APICall
     http_response: Response
+    error: Exception
 
-    def __init__(self, api_call: APICall, http_response:Response):
+    def __init__(self, gmail_message: GmailMessage, api_call: APICall, http_response:Response, error = None):
+        self.gmail_message = gmail_message
         self.api_call = api_call
         self.http_response = http_response
+        self.error = error
 
 
 class ValidationConfiguration:

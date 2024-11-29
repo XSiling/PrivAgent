@@ -20,10 +20,10 @@ class ValidationService:
                 parse(response.params['timeMax'])
 
             if response.body and 'start' in response.body:
-                parse(response.body['start']['datetime'])
+                parse(response.body['start']['dateTime'])
 
             if response.body and 'end' in response.body:
-                parse(response.body['end']['datetime'])
+                parse(response.body['end']['dateTime'])
 
         except ParserError:
             raise Exception("Time in the params invalid.")

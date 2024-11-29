@@ -5,6 +5,7 @@ from base64 import urlsafe_b64decode
 from tool import extract_email_address_from_sender
 import re
 
+
 SEND_FROM_KEY = 'From'
 DATE_KEY = 'Date'
 SEND_TO_KEY = 'To'
@@ -17,7 +18,7 @@ class EmailService:
     def __init__(self, server_start_time, test_old_emails):
         self.server_start_time = server_start_time
         self.test_old_emails = test_old_emails
-        self.email_history = []
+        self.email_history: list[HistoryRecord] = []
 
 
     def extract_message_content(self, payload):
@@ -105,23 +106,32 @@ class EmailService:
         response : list[APICall] = self.llm_agent.get_api_calls(message)
         return response
     
-    def save_history(self, response: APICall, confirm_response):
+    def save_history(self, gmail_message: GmailMessage, response: APICall, confirm_response, error: Exception = None):
         self.email_history.append(
-            HistoryRecord(response, confirm_response)
+            HistoryRecord(gmail_message, response, confirm_response, error)
         )
 
     def get_history_as_string(self):
         content = ""
         for record in self.email_history:
             record_string = ""
-            record_string += "scope: {}\t".format(" ".join(record.api_call.scope))
-            record_string += "api: {}\t".format(str(record.api_call.api))
-            record_string += "method: {}\t".format(str(record.api_call.method))
-            record_string += "headers: {}\t".format(str(record.api_call.headers))
-            record_string += "params: {}\t".format(str(record.api_call.params))
-            record_string += "body: {}\t".format(str(record.api_call.body))
-
-            record_string += "response: {}\t".format(str(record.http_response))
+            if record.gmail_message: 
+                record_string += "gmail id: {}\t".format(str(record.gmail_message.id))
+                record_string += "gmail send from: {}\t".format(str(record.gmail_message.send_from))
+                record_string += "gmail date: {}\t".format(str(record.gmail_message.date))
+                record_string += "send to: {}\t".format(str(record.gmail_message.send_to))
+                record_string += "content: {}\t".format(str(record.gmail_message.content))
+            if record.api_call:
+                record_string += "scope: {}\t".format(" ".join(record.api_call.scope))
+                record_string += "api: {}\t".format(str(record.api_call.api))
+                record_string += "method: {}\t".format(str(record.api_call.method))
+                record_string += "headers: {}\t".format(str(record.api_call.headers))
+                record_string += "params: {}\t".format(str(record.api_call.params))
+                record_string += "body: {}\t".format(str(record.api_call.body))
+            if record.http_response: 
+                record_string += "response: {}\t".format(str(record.http_response))
+            if record.error:
+                record_string += "error: {}\t".format(str(record.error))
             content += record_string 
             content += "\n"
         return content
