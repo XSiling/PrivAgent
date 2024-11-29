@@ -75,7 +75,10 @@ class Pet:
             self.root.config(bg='systemTransparent')
         
         self.root.attributes('-topmost', True) # put window on top
-        self.root.bind("<Button-1>", self.onLeftClick)
+        self.root.bind('<Button-1>', self.start_drag)
+        self.root.bind('<B1-Motion>', self.drag)
+        self.root.bind('<ButtonRelease-1>', self.stop_drag)
+        # self.root.bind("<Button-1>", self.onLeftClick)
         self.root.bind("<Button-2>", self.onRightClick)
         self.root.bind("<Button-3>", self.onRightClick)
         self.root.bind("<Key>", self.onKeyPress)
@@ -94,7 +97,6 @@ class Pet:
         self.curr_width = screen_width-self.pixels_from_right 
         self.curr_height = screen_height-self.pixels_from_bottom 
         self.root.geometry('%dx%d+%d+%d' % (100, 100, self.curr_width, self.curr_height))
-        
         
         self.server_thread.start()
         
@@ -302,7 +304,24 @@ class Pet:
         self.root.after(self.delay, self.update, 0, 'sleep') # start on idle
         self.root.mainloop()
     
-    
+    def start_drag(self, event):
+        if self.current_mode == "pet":
+            self.is_dragging = True
+            self.offset_x = event.x
+            self.offset_y = event.y
+
+    def drag(self, event):
+        if self.current_mode == "pet" and self.is_dragging:
+            new_x = self.root.winfo_pointerx() - self.offset_x
+            new_y = self.root.winfo_pointery() - self.offset_y
+            self.curr_width = new_x
+            self.curr_height = new_y
+            self.root.geometry(f'100x100+{int(self.curr_width)}+{int(self.curr_height)}')
+
+    def stop_drag(self, event):
+        if self.current_mode == "pet":
+            self.is_dragging = False
+
     def quit(self):
         self.root.destroy()
         self.server_thread.join()
