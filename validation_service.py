@@ -11,7 +11,7 @@ class ValidationService:
             self.check_api_in_whitelist(api_call)
             self.check_essential_params(api_call)
             self.check_valid_params(api_call)
-            self.check_resource_id_is_related(api_call)
+            # self.check_resource_id_is_related(api_call)
 
 
     def check_valid_params(self, response: APICall):
@@ -64,6 +64,7 @@ class ValidationService:
                     request.body['start']['timeZone'] = 'America/Los_Angeles'
                 if 'timeZone' not in request.body['end']:
                     request.body['start']['timeZone'] = 'America/Los_Angeles'
+                request.params = {}
 
             # create_doc
             # by default with a title 

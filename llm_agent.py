@@ -3,6 +3,7 @@ from data import APICall
 from rag_llm import RagLLM
 from utils import get_current_time
 from datetime import datetime
+import re
 
 base_url = "http://localhost:1234/v1" # Run LM Studio server on this port before running this code
 
@@ -119,8 +120,8 @@ class LLMAgent:
 
         response = self.query(system_msg, message, self.use_rag)
         lines = response.split("\n")
-        scope = [line for line in lines if "https://" in line][0].strip("`'")
-
+        scope = [line for line in lines if "https://" in line][0]
+        scope = re.sub("`|'|\{|\}", "", scope)
 
         print("Service Scope: ", scope)
         return scope
@@ -135,7 +136,8 @@ class LLMAgent:
         
         response = self.query(system_msg, message, self.use_rag)
         lines = response.split("\n")
-        api = [line for line in lines if "https://" in line][0].strip("`'\{\}")
+        api = [line for line in lines if "https://" in line][0]
+        api = re.sub("`|'|\{|\}", "", api)
 
         print("Service API: ", api)
         return api

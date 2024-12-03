@@ -82,9 +82,17 @@ class EmailService:
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
 
+        content = self.filter_second_forward(content)
+
         gmail_message = GmailMessage(id, thread_id, send_from, date, send_to, content)
 
         return gmail_message
+    
+    def filter_second_forward(self, content: str):
+        split_content = content.split("---------- Forwarded message ---------")
+        if len(split_content) >= 3:
+            return split_content[0] + split_content[-1]
+        return content
     
     def retrieve_messages(self, start_timestamp):
         service = self.gmail_service.get_service()
