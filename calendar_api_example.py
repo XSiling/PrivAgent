@@ -116,7 +116,7 @@ def create_calendar_event_with_http_api():
         print("Creating calendar event")
         headers = {
             'Content-Type': 'application/json', 
-            'Authorization': 'Bearer ya29.a0AeDClZCX5EDZITr1b-TsX9ves2jgoNMEDPcTGvnvPEyzW5GkE_meQlbvy225JL5aNwn30KmHOSDXEB_6X3TJ914AHY5OX2N_B94It-mNzjovL4-0Fpi8GZBtlxS04kOxgDuxSobHJwaKVFo9RkjTKoOo120EzVPAgjTB1GJraCgYKAVsSARASFQHGX2MiOrT4Ps7q76Eqf5BdLCl2IA0175'
+            'Authorization': 'Bearer ya29.a0AeDClZBS-xl3YwosvBKNkbwqDt46rip2vRGiT9DV9aZ7pfnxbQNP7_sqPl0t8xRxjg6tg-UczRaovg0367EEA8HuEqk1235ygF6lHUoBUYWX9g-2Xk5DXAvFKvB7fWNkMiVj8c4lWQE1EJIoJfX-y3gs5oMx44bM7W1sUS8qaCgYKARgSARASFQHGX2MiDcjx5aJJchIZXmGdF_aalg0175'
         }
         params = {}
         body = {'summary': 'Project Meeting with Jieyi', 'description': '', 'start': {'dateTime': '2024-12-02T13:00:00', 'timeZone': 'America/Los_Angeles'}, 'end': {'dateTime': '2024-12-02T14:30:00', 'timeZone': 'America/Los_Angeles'}}
@@ -188,9 +188,9 @@ def delete_cal_event():
         print("Deleting calendar events")
         headers = {
             'Content-Type': 'application/json', 
-            'Authorization': 'Bearer ya29.a0AeDClZCX5EDZITr1b-TsX9ves2jgoNMEDPcTGvnvPEyzW5GkE_meQlbvy225JL5aNwn30KmHOSDXEB_6X3TJ914AHY5OX2N_B94It-mNzjovL4-0Fpi8GZBtlxS04kOxgDuxSobHJwaKVFo9RkjTKoOo120EzVPAgjTB1GJraCgYKAVsSARASFQHGX2MiOrT4Ps7q76Eqf5BdLCl2IA0175'
+            'Authorization': 'Bearer ya29.a0AeDClZBS-xl3YwosvBKNkbwqDt46rip2vRGiT9DV9aZ7pfnxbQNP7_sqPl0t8xRxjg6tg-UczRaovg0367EEA8HuEqk1235ygF6lHUoBUYWX9g-2Xk5DXAvFKvB7fWNkMiVj8c4lWQE1EJIoJfX-y3gs5oMx44bM7W1sUS8qaCgYKARgSARASFQHGX2MiDcjx5aJJchIZXmGdF_aalg0175'
         }
-        params = {"eventId": "r2udd5avbvsupla90dfu6f13ao"}
+        params = {"eventId": "5m5abj0bmdvdn4fcdfk7mpht0k"}
         body = None
         response = requests.delete("https://www.googleapis.com/calendar/v3/calendars/primary/events/eventId", params=params, headers=headers, json=body)
 

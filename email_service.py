@@ -77,7 +77,7 @@ class EmailService:
         if email_address not in self.gmail_configurations.email_whitelist:
             return None
         
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         content = self.extract_message_content(payload)
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
@@ -108,13 +108,13 @@ class EmailService:
             history_prompt = ""
         
         # Generate the prompt containing current email message and history data
-        prompt = "Sender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content) + "\n" + history_prompt
+        prompt = history_prompt + "\nSender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content)
         
         print("Prompt: \n", prompt)
         return prompt
 
-    def send_message_to_llm_agent(self, message: str):
-        response : list[APICall] = self.llm_agent.get_api_calls(message)
+    def send_message_to_llm_agent(self, message: str, thread_id: str):
+        response : list[APICall] = self.llm_agent.get_api_calls(message, thread_id)
         return response
     
     def save_history(self, gmail_message: GmailMessage, response: APICall, confirm_response, error: Exception = None):

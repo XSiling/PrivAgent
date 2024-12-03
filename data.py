@@ -40,8 +40,9 @@ class APICall:
     headers = None
     params = None
     body = None
+    thread_id = None
     
-    def __init__(self, scope, api, method, params, body):
+    def __init__(self, scope, api, method, params, body, thread_id):
         if not isinstance(params, dict) or not isinstance(body, dict):
             raise TypeError("Params or body is not a Python dictionary.")
         self.scope = scope
@@ -53,6 +54,7 @@ class APICall:
         }
         self.params = params if params != {} else None
         self.body = body if self.method in [HTTPMethod.POST, HTTPMethod.PUT] and body != {} else None
+        self.thread_id = thread_id
 
     def print(self):
         print("API: ", self.api)
@@ -79,5 +81,6 @@ class ValidationConfiguration:
     create_doc = (HTTPMethod.POST, "https://docs.googleapis.com/v1/documents")
     create_sheet = (HTTPMethod.POST, "https://sheets.googleapis.com/v4/spreadsheets")
     get_calendar_events = (HTTPMethod.GET, "https://www.googleapis.com/calendar/v3/calendars/primary/events")
-
-    api_whitelist = [create_calendar_event, create_doc, create_sheet, get_calendar_events]
+    delete_calendar_event = (HTTPMethod.DELETE, "https://www.googleapis.com/calendar/v3/calendars/primary/events/eventId")
+    delete_file_event = (HTTPMethod.DELETE, "https://www.googleapis.com/drive/v2/files/fileId")
+    api_whitelist = [create_calendar_event, create_doc, create_sheet, get_calendar_events, delete_calendar_event, delete_file_event]
