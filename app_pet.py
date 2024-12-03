@@ -115,7 +115,7 @@ class Server:
             else:
                 try:
                     prompt = self.email_service.generate_prompt(current_message)
-                    response: list[APICall] = self.email_service.send_message_to_llm_agent(prompt)
+                    response: list[APICall] = self.email_service.send_message_to_llm_agent(prompt, current_message.thread_id)
                     self.validation_service.validate_response(response)
 
                     for api_call in response:

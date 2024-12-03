@@ -1,6 +1,7 @@
 from data import APICall, ValidationConfiguration, HTTPMethod
 from dateutil.parser import parse, ParserError
 from datetime import datetime, timedelta
+from email_service import EmailService
 
 class ValidationService:
     def validate_response(self, response: list[APICall]):
@@ -10,6 +11,7 @@ class ValidationService:
             self.check_api_in_whitelist(api_call)
             self.check_essential_params(api_call)
             self.check_valid_params(api_call)
+            self.check_resource_id_is_related(api_call)
 
 
     def check_valid_params(self, response: APICall):
@@ -116,7 +118,20 @@ class ValidationService:
         
 
     def check_resource_id_is_related(self, response: APICall):
-        pass
+        # Check for delete calendar event
+        if response.api == "https://www.googleapis.com/calendar/v3/calendars/primary/events/eventId":
+            thread_id = response.thread_id
+            _, id = EmailService.get_related_history(thread_id)
+            resource_id = response.params["eventId"]
+            if id != resource_id: 
+                raise Exception("Target event is not created by this thread.")
+        # Check for delete file
+        elif response.api == "https://www.googleapis.com/drive/v2/files/fileId":
+            thread_id = response.thread_id
+            _, id = EmailService.get_related_history(thread_id)
+            resource_id = response.params["fileId"]
+            if id != resource_id: 
+                raise Exception("Target file is not created by this thread.")
         
 
     
