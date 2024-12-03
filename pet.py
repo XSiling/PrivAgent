@@ -26,7 +26,7 @@ class Pet:
         self.root.title("PrivAgent")
         self.current_mode = "pet"
 
-        self.confirmation_setting_var = customtkinter.StringVar(value="off")
+        self.confirmation_setting_var = customtkinter.StringVar(value="on")
         self.pet_moving_setting_var = customtkinter.StringVar(value="on")
         self.expiration_setting_var = tkinter.StringVar()
         self.expiration_setting_var = customtkinter.StringVar(value="Expired at once")

@@ -126,7 +126,7 @@ class EmailService:
     def get_related_history(self, thread_id):
         # return api and id 
         for record in self.email_history:
-            if record.gmail_message.thread_id == thread_id and record.api_call.method == 'POST':
+            if record.gmail_message and record.gmail_message.thread_id == thread_id and record.api_call and record.api_call.method == 'POST':
                 http_response = json.loads(record.http_response.text)
                 id = http_response["id"]
                 api = record.api_call.api

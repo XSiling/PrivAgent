@@ -24,7 +24,7 @@ class ActionService:
 
     def __init__(self):
         self.token_cache = {}
-        self.token_expiration_policy = TokenExpirationPolicy.EXPIRE_AFTER_TIME
+        self.token_expiration_policy = TokenExpirationPolicy.EXPIRE_IN_TIMES
         self.token_expiration_times = 1
         self.token_expiration_time = 100
         self.token_lock = Lock()
@@ -96,7 +96,7 @@ class ActionService:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     "credentials.json", scopes
                 )
-                creds = flow.run_local_server(port=0)
+                creds = flow.run_local_server(port=0, timeout_seconds=120)
             
             # once has a nice credentials, store that
             with open(token_file_location, "w") as token:
