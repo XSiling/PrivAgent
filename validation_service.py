@@ -1,5 +1,6 @@
 from data import APICall, ValidationConfiguration, HTTPMethod
 from dateutil.parser import parse, ParserError
+from datetime import datetime, timedelta
 
 class ValidationService:
     def validate_response(self, response: list[APICall]):
@@ -7,6 +8,7 @@ class ValidationService:
 
         for api_call in response:
             self.check_api_in_whitelist(api_call)
+            self.check_essential_params(api_call)
             self.check_valid_params(api_call)
 
 
@@ -28,7 +30,79 @@ class ValidationService:
         except ParserError:
             raise Exception("Time in the params invalid.")
 
+    def get_one_hour_later_datetime(self, start_time):
+        end_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S") + timedelta(hours=1)
+        end_time = datetime.strftime("%Y-%m-%dT%H:%M:%S")
+        return end_time
 
+    def check_essential_params(self, request: APICall):
+        req = (request.method, request.api)
+        req_index = ValidationConfiguration.api_whitelist.index(req)
+        # fill in the blank parameters, if impossible then throw exception
+
+        match req_index:
+            # create_calendar_event
+            # by default create on right now with 1 hour window
+            case 0:
+                if 'start' not in request.body:
+                    request.body['start'] = {
+                        'dateTime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                        'timeZone': 'America/Los_Angeles'
+                    }
+                if 'end' not in request.body:
+                    request.body['end'] = {
+                        'dateTime': self.get_one_hour_later_datetime(request.body['start']['dateTime']),
+                        'timeZone': 'America/Los_Angeles'
+                    }
+                if 'dateTime' not in request.body['start']:
+                    request.body['start']['dateTime'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                if 'dateTime' not in request.body['end']:
+                    request.body['end']['dateTime'] = self.get_one_hour_later_datetime(request.body['start']['dateTime'])
+                if 'timeZone' not in request.body['start']:
+                    request.body['start']['timeZone'] = 'America/Los_Angeles'
+                if 'timeZone' not in request.body['end']:
+                    request.body['start']['timeZone'] = 'America/Los_Angeles'
+
+            # create_doc
+            # by default with a title 
+            case 1:
+                if 'title' not in request.body:
+                    request.body['title'] = 'LLM Agent Docs'
+
+            # create_sheet
+            # by default with a title
+            case 2:
+                if 'properties' not in request.body:
+                    request.body['properties'] = {}
+                
+                if 'title' not in request.body['properties']:
+                    request.body['properties']['title'] = 'LLM Agent Sheet'
+
+            # get_calendar_events
+            # by default fetch all the events on today
+            case 3:
+                if 'timeMin' not in request.body:
+                    request.body['timeMin'] = datetime.now().strftime("%Y-%m-%dT00:00:00Z")
+                if 'timeMax' not in request.body:
+                    request.body['timeMax'] = datetime.now().strftime("%Y-%m-%dT23:59:59Z")
+                if 'singleEvents' not in request.body:
+                    request.body['singleEvents'] = True
+                if 'orderBy' not in request.body:
+                    request.body['orderBy'] = 'startTime'
+                if 'timeZone' not in request.body:
+                    request.body['TimeZone'] = 'America/Los_Angeles'
+
+            #delete_calendar_event
+            case 4:
+                request.body = {}
+                if 'eventId' not in request.params:
+                    raise Exception("Lack eventId in delete calendar event api request")
+
+            # delete_file_event
+            case 5:
+                request.body = {}
+                if 'fileId' not in request.params:
+                    raise Exception("Lack fileId in delete file event")
 
     def check_response_not_empty(self, response: list[APICall]):
         if len(response) == 0:
