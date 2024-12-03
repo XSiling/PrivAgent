@@ -24,7 +24,7 @@ class EmailService:
 
     def extract_message_content(self, payload):
         mime_type = payload['mimeType']
-        recursive_type = ['multipart/mixed', 'multipart/alternative']
+        recursive_type = ['multipart/mixed', 'multipart/alternative', 'multipart/related']
         direct_process_type = ['text/plain']
         ignore_type = ['text/html']
 
@@ -77,6 +77,7 @@ class EmailService:
         if email_address not in self.gmail_configurations.email_whitelist:
             return None
         
+        import pdb;pdb.set_trace()
         content = self.extract_message_content(payload)
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
@@ -124,7 +125,6 @@ class EmailService:
 
     def get_related_history(self, thread_id):
         # return api and id 
-        # import pdb;pdb.set_trace()
         for record in self.email_history:
             if record.gmail_message.thread_id == thread_id and record.api_call.method == 'POST':
                 http_response = json.loads(record.http_response.text)
