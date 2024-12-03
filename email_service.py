@@ -4,6 +4,7 @@ from data import GmailMessage, GmailConfiguration, APICall, HistoryRecord
 from base64 import urlsafe_b64decode
 from tool import extract_email_address_from_sender
 import re
+import json
 
 
 SEND_FROM_KEY = 'From'
@@ -86,6 +87,7 @@ class EmailService:
     
     def retrieve_messages(self, start_timestamp):
         service = self.gmail_service.get_service()
+        # import pdb;pdb.set_trace()
         results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=f"after:{start_timestamp}").execute()
         messageIds = results.get('messages',[])
         messages = []
@@ -94,11 +96,19 @@ class EmailService:
             filtered_msg = self.filter_message(msg)
             if filtered_msg != None:
                 messages.append(filtered_msg)
-        return messages
+        return messages[::-1]
     
     def generate_prompt(self, message: GmailMessage):
-        # TODO: Improve this
-        prompt = "Sender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content)
+        # Get related api history
+        api, id = self.get_related_history(message.thread_id)
+        if api is not None and id is not None:
+            history_prompt = "The related Google resource ID created by the api " + api + " is " + id
+        else:
+            history_prompt = ""
+        
+        # Generate the prompt containing current email message and history data
+        prompt = "Sender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content) + "\n" + history_prompt
+        
         print("Prompt: \n", prompt)
         return prompt
 
@@ -110,6 +120,19 @@ class EmailService:
         self.email_history.append(
             HistoryRecord(gmail_message, response, confirm_response, error)
         )
+
+
+    def get_related_history(self, thread_id):
+        # return api and id 
+        # import pdb;pdb.set_trace()
+        for record in self.email_history:
+            if record.gmail_message.thread_id == thread_id and record.api_call.method == 'POST':
+                http_response = json.loads(record.http_response.text)
+                id = http_response["id"]
+                api = record.api_call.api
+                return api, id
+
+        return None, None
 
     def get_history_as_string(self):
         content = ""

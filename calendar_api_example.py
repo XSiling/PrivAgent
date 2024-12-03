@@ -182,6 +182,23 @@ def get_cal_events_with_http_api():
         print(f"An error occurred: {error}")
 
 
+def delete_cal_event():
+
+    try:
+        print("Deleting calendar events")
+        headers = {
+            'Content-Type': 'application/json', 
+            'Authorization': 'Bearer ya29.a0AeDClZBo-SnrW8t_MQofNaGwN2E59YPtdhvU7OcaiUE81y-dgMrQE_9lKUzxv1ZtzNSev9P_1bnXRuyMc3YKuwtLgrn8eTFTRCrY_wcAFy_nSvw7N7yb3dys2nqZPGxCPxTANjN22R4h2lnQ4hjLGWlwha0Pub8DVVOhP6dmaCgYKAQoSARASFQHGX2Mi4x4qfVzryzbxKrHRgdZ4fw0175'
+        }
+        params = {"eventId": "11"}
+        body = None
+        response = requests.delete("https://www.googleapis.com/calendar/v3/calendars/primary/events", params=params, headers=headers, json=body)
+
+        print(response.text)
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
 if __name__ == '__main__':
-    # print(get_token("https://www.googleapis.com/auth/calendar.readonly").token)
-    get_cal_events_with_http_api()
+    print(get_token("https://www.googleapis.com/auth/calendar").token)
+    create_calendar_event_with_http_api()

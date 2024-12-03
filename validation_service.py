@@ -34,10 +34,15 @@ class ValidationService:
         if len(response) == 0:
             raise Exception("Email instruction invalid, thus response is empty.")
     
+
     def check_api_in_whitelist(self, request: APICall):
         req = (request.method, request.api)
         if not req in ValidationConfiguration.api_whitelist:
             raise Exception("API call not allowed.")
+        
+
+    def check_resource_id_is_related(self, response: APICall):
+        pass
         
 
     
