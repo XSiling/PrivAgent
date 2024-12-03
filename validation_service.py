@@ -34,7 +34,7 @@ class ValidationService:
 
     def get_one_hour_later_datetime(self, start_time):
         end_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S") + timedelta(hours=1)
-        end_time = datetime.strftime("%Y-%m-%dT%H:%M:%S")
+        end_time = end_time.strftime("%Y-%m-%dT%H:%M:%S")
         return end_time
 
     def check_essential_params(self, request: APICall):
