@@ -7,10 +7,14 @@ from tkinter.messagebox import askyesno
 from tkinter import filedialog, ttk
 import threading
 from data import TokenExpirationPolicy
+import customtkinter
+
+CUSTOM_TK = 1.67
 
 class Pet:
     def __init__(self):
-        self.root = tkinter.Tk() # create window
+        customtkinter.set_default_color_theme('dark-blue')
+        self.root = customtkinter.CTk()
         self.delay = 200 # delay in ms
         self.pixels_from_right = 200 # change to move the pet's starting position
         self.pixels_from_bottom = 200 # change to move the pet's starting position
@@ -18,14 +22,15 @@ class Pet:
         self.server = Server()
         self.server_thread = threading.Thread(target=self.run_server)
         self.unsolved_event = []
-        self.configurations = {
-            "confirm":True,
-            "pet_move":True,
-        }
+
         self.root.title("PrivAgent")
         self.current_mode = "pet"
 
+        self.confirmation_setting_var = customtkinter.StringVar(value="on")
+        self.pet_moving_setting_var = customtkinter.StringVar(value="on")
         self.expiration_setting_var = tkinter.StringVar()
+        self.expiration_setting_var = customtkinter.StringVar(value="Expired at once")
+
         self.expiration_setting_choices = (
             "Expired at once",
             "Expired after 1 time",
@@ -35,31 +40,26 @@ class Pet:
             "Expired after 1 hour",
             "Expired after 2 hours"
         )
-        self.expiration_choice_index = 0
 
-        self.expiration_setting_map = [
-            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 1, 0],
-            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 2, 0],
-            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 3, 0],
-            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 6, 0],
-            [TokenExpirationPolicy.EXPIRE_IN_TIMES, 11, 0],
-            [TokenExpirationPolicy.EXPIRE_AFTER_TIME, 1, 3600],
-            [TokenExpirationPolicy.EXPIRE_AFTER_TIME, 1, 7200]
-        ]
-
-        self.toggle_on_image = tkinter.PhotoImage(file=os.path.abspath("images/toggle_on.png")).subsample(10, 10)
-        self.toggle_off_image = tkinter.PhotoImage(file=os.path.abspath("images/toggle_off.png")).subsample(10, 10)
-        self.toggle_off_hover_image = tkinter.PhotoImage(file=os.path.abspath("images/toggle_off_hover.png")).subsample(10, 10)
+        self.expiration_setting_map = {
+            "Expired at once": [TokenExpirationPolicy.EXPIRE_IN_TIMES, 1, 0],
+            "Expired after 1 time": [TokenExpirationPolicy.EXPIRE_IN_TIMES, 2, 0],
+            "Expired after 2 times": [TokenExpirationPolicy.EXPIRE_IN_TIMES, 3, 0],
+            "Expired after 5 times": [TokenExpirationPolicy.EXPIRE_IN_TIMES, 6, 0],
+            "Expired after 10 times": [TokenExpirationPolicy.EXPIRE_IN_TIMES, 11, 0],
+            "Expired after 1 hour": [TokenExpirationPolicy.EXPIRE_AFTER_TIME, 1, 3600],
+            "Expired after 2 hours": [TokenExpirationPolicy.EXPIRE_AFTER_TIME, 1, 7200]
+        }
 
         # initialize frame arrays
         self.animation = dict(
-            idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle.gif'), format = 'gif -index %i' % i) for i in range(5)],
-            idle_to_sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle-to-sleep.gif'), format = 'gif -index %i' % i) for i in range(8)],
-            sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep.gif'), format = 'gif -index %i' % i) for i in range(3)]*3,
-            sleep_to_idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep-to-idle.gif'), format = 'gif -index %i' % i) for i in range(8)],
-            walk_left = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-left.gif'), format = 'gif -index %i' % i) for i in range(8)],
-            walk_right = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-right.gif'),format = 'gif -index %i' % i) for i in range(8)],
-            wait_for_response = [tkinter.PhotoImage(file=os.path.abspath('gifs/wait_for_response.png'))]
+            idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(5)],
+            idle_to_sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle-to-sleep.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
+            sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(3)]*3,
+            sleep_to_idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep-to-idle.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
+            walk_left = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-left.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
+            walk_right = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-right.gif'),format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
+            wait_for_response = [tkinter.PhotoImage(file=os.path.abspath('gifs/wait_for_response.png')).zoom(9,9).subsample(5,5)]
         )
 
         # window configuration
@@ -75,7 +75,10 @@ class Pet:
             self.root.config(bg='systemTransparent')
         
         self.root.attributes('-topmost', True) # put window on top
-        self.root.bind("<Button-1>", self.onLeftClick)
+        self.root.bind('<Button-1>', self.start_drag)
+        self.root.bind('<B1-Motion>', self.drag)
+        self.root.bind('<ButtonRelease-1>', self.stop_drag)
+        # self.root.bind("<Button-1>", self.onLeftClick)
         self.root.bind("<Button-2>", self.onRightClick)
         self.root.bind("<Button-3>", self.onRightClick)
         self.root.bind("<Key>", self.onKeyPress)
@@ -84,16 +87,16 @@ class Pet:
         #     self.label.config(bg='systemTransparent')
         self.label.pack()
         
-        screen_width = self.root.winfo_screenwidth() # width of the entire screen
-        screen_height = self.root.winfo_screenheight() # height of the entire screen
+        screen_width = self.root.winfo_screenwidth() * CUSTOM_TK # width of the entire screen
+        screen_height = self.root.winfo_screenheight() * CUSTOM_TK# height of the entire screen
+        print("the screen width%d, the screen height %d", screen_width, screen_height)
         self.min_width = 10 # do not let the pet move beyond this point
         self.max_width = screen_width-110 # do not let the pet move beyond this point
         
         # change starting properties of the window
-        self.curr_width = screen_width-self.pixels_from_right
-        self.curr_height = screen_height-self.pixels_from_bottom
+        self.curr_width = screen_width-self.pixels_from_right 
+        self.curr_height = screen_height-self.pixels_from_bottom 
         self.root.geometry('%dx%d+%d+%d' % (100, 100, self.curr_width, self.curr_height))
-        
         
         self.server_thread.start()
         
@@ -106,7 +109,7 @@ class Pet:
             if curr_animation == 'wait_for_response':
                 while self.server.event_queue.qsize() != 0:
                     event = self.server.event_queue.get(False)
-                    if self.configurations["confirm"]:
+                    if self.confirmation_setting_var.get() == "on":
                         self.unsolved_event.append(event)
                     else:
                         self.server.handler_queue.put(True)
@@ -137,107 +140,58 @@ class Pet:
             event = self.unsolved_event.pop(0)
             answer = askyesno(message = self.server.confirm_service.get_confirmation_text(event.message))
             self.server.handler_queue.put(answer)
-
-    def toggle_button(self, button_name: str, button: tkinter.Button):
-        self.configurations[button_name] = not self.configurations[button_name]
-        configuration = self.configurations[button_name]
-        print("toggle the button to", configuration)
-        if configuration:
-            button.config(image=self.toggle_on_image)
-        else:
-            button.config(image=self.toggle_off_image)
-        print("done the image change")
-
-    def toggle(self):
-        current_configuration = self.configurations["confirm"]
-        self.configurations["confirm"] = not current_configuration
         
-        if self.configurations["confirm"]:
-            self.confirm_button.config(image=self.toggle_on_image)
-        else:
-            self.confirm_button.config(image=self.toggle_off_image)
-        
+    def toggle_confirmation(self):
+        print("confirmation switch toggled, current value: ", self.confirmation_setting_var.get())
     
+    def toggle_pet_moving(self):
+        print("pet moving switch toggled, current value:", self.pet_moving_setting_var.get())
+
+    def toggle_expiration_combobox(self, choice):
+        print("combobox clicked:", choice)
+        print(self.expiration_setting_map.keys())
+        policy, token_times, token_time = self.expiration_setting_map[choice]
+        self.server.action_service.set_policy(policy, token_times, token_time)
+
     def transform_pet_to_window(self):
-        # transform the pet to window
-        # self.root.destroy()
         self.root.overrideredirect(False)
         self.root.attributes('-topmost', False)
         self.curr_width = 300
-        self.curr_height = 230
-        ws = self.root.winfo_screenwidth()
-        hs = self.root.winfo_screenheight()
-        x = (ws/2) - (self.curr_width/2)
-        y = (hs/2) - (self.curr_height/2)
+        self.curr_height = 350
+        ws = self.root.winfo_screenwidth() * CUSTOM_TK
+        hs = self.root.winfo_screenheight() * CUSTOM_TK
+        x = (ws/2) - (CUSTOM_TK * self.curr_width/2)
+        y = (hs/2) - (CUSTOM_TK * self.curr_height/2)
 
         self.root.geometry('%dx%d+%d+%d' % (self.curr_width, self.curr_height, x, y))
         self.root.update_idletasks()
         self.label.destroy()
 
-        self.window_frame = tkinter.Frame(self.root)
-        self.window_frame.pack()
+        self.configuration_label = customtkinter.CTkLabel(master=self.root, text='User Configurations')
+        self.configuration_label.pack(padx=20, pady=10)
 
-        self.confirm_button_frame = tkinter.Frame(self.window_frame, pady=10)
-        self.confirm_button_label = tkinter.Label(self.confirm_button_frame, text='ask confirmation before action')
-        self.confirm_button_label.pack(side='left', padx=10)
-        if self.configurations["confirm"]:
-            confirm_button_image = self.toggle_on_image
-        else:
-            confirm_button_image = self.toggle_off_image
-        self.confirm_button = tkinter.Button(self.confirm_button_frame, image = confirm_button_image, bd=0, command=lambda: self.toggle_button("confirm", self.confirm_button))
-        # self.confirm_button.bind('<Enter>', lambda: self.mouse_enter_button(self.confirm_button, "confirm"))
-        # self.confirm_button.bind('<Leave>', lambda: self.mouse_leave_button(self.confirm_button, "confirm"))
-        self.confirm_button.pack(side='right', padx=10)
-        self.confirm_button_frame.pack()
-
-        self.pet_moving_frame = tkinter.Frame(self.window_frame, pady=10)
-        self.pet_moving_button_label = tkinter.Label(self.pet_moving_frame, text='keep pet moving')
-        self.pet_moving_button_label.pack(side='left', padx=10)
-        if self.configurations["pet_move"]:
-            pet_moving_button_image = self.toggle_on_image
-        else:
-            pet_moving_button_image = self.toggle_off_image
-        self.pet_moving_button = tkinter.Button(self.pet_moving_frame, image=pet_moving_button_image, bd=0, command = lambda: self.toggle_button("pet_move", self.pet_moving_button))
-        self.pet_moving_button.pack(side='right', padx=10)
-        self.pet_moving_frame.pack()
-
-        self.expiration_setting_frame = tkinter.Frame(self.window_frame, pady=10)
-        self.expiration_setting_combobox = ttk.Combobox(self.expiration_setting_frame, values=self.expiration_setting_choices)
-        self.expiration_setting_combobox.current(self.expiration_choice_index)
-        self.expiration_setting_combobox.pack(side='left')
-        self.expiration_setting_confirm_button = tkinter.Button(self.expiration_setting_frame, text='Confirm', command=self.confirm_expiration_setting, padx=10)
-        self.expiration_setting_confirm_button.pack(side='right')
-        self.expiration_setting_frame.pack()
+        self.configuration_frame = customtkinter.CTkFrame(master=self.root, width=260, height=190)
         
-        #----------------------------------------------------
-        self.mode_button_frame = tkinter.Frame(self.window_frame, pady=10)
-        self.mode_button = tkinter.Button(self.mode_button_frame, text='Return To Pet Mode', command=self.transform_window_to_pet)
-        self.mode_button.pack()
-        self.mode_button_frame.pack()
+        self.confirm_button_switch = customtkinter.CTkSwitch(master=self.configuration_frame, text='ask confirmation before action', command=self.toggle_confirmation, variable=self.confirmation_setting_var, onvalue="on", offvalue="off")
+        self.confirm_button_switch.pack(padx=20, pady=10)
+        self.pet_moving_button_switch = customtkinter.CTkSwitch(master=self.configuration_frame, text='keep pet moving', command=self.toggle_pet_moving, variable=self.pet_moving_setting_var, onvalue="on", offvalue="off")
+        self.pet_moving_button_switch.pack(padx=20, pady=10)        
 
-        self.log_download_button_frame = tkinter.Frame(self.window_frame, pady=10)
-        self.log_download_button = tkinter.Button(self.log_download_button_frame, text='Download Log', command=self.download_log)
-        self.log_download_button.pack()
-        self.log_download_button_frame.pack()
+        self.expiration_frame = customtkinter.CTkFrame(master=self.configuration_frame, bg_color="transparent", fg_color="transparent")
+        self.expiration_label = customtkinter.CTkLabel(master = self.expiration_frame, text='token expiration policy')
+        self.expiration_label.pack(padx=20, pady=2, side='top')
+        self.expiration_combobox = customtkinter.CTkComboBox(master=self.expiration_frame, values=self.expiration_setting_choices, command=self.toggle_expiration_combobox, variable=self.expiration_setting_var, width=200)        
+        self.expiration_combobox.pack(padx=10, pady=2, side='left')
 
+        self.expiration_frame.pack(pady=10)
 
-    def confirm_expiration_setting(self):
-        current_index = self.expiration_setting_combobox.current()
-        if current_index != self.expiration_choice_index:
-            policy, token_times, token_time = self.expiration_setting_map[current_index]
-            self.server.action_service.set_policy(policy, token_times, token_time)
-            self.expiration_setting_combobox.current(current_index)
-            self.expiration_choice_index = current_index
+        self.configuration_frame.pack(pady=10)
 
-    def mouse_enter_button(self, button, button_name):
-        print("mouse enter")
-        if not self.configurations[button_name]:
-            button.image = self.toggle_off_hover_image
+        self.mode_button = customtkinter.CTkButton(master=self.root,text='Return To Pet', corner_radius=8, command=self.transform_window_to_pet)
+        self.mode_button.pack(padx=20, pady=10)
 
-    def mouse_leave_button(self, button, button_name):
-        print("mouse leave")
-        if not self.configurations[button_name]:
-            button.image = self.toggle_off_image
+        self.log_download_button = customtkinter.CTkButton(master=self.root, text='Download Log', corner_radius=8, command=self.download_log)
+        self.log_download_button.pack(padx=20, pady=2)
 
     def download_log(self):
         history = self.server.email_service.get_history_as_string()
@@ -254,17 +208,23 @@ class Pet:
         self.current_mode="pet"
         self.root.overrideredirect(True)
         self.root.attributes('-topmost', True)
-        self.curr_width = self.root.winfo_screenwidth() - self.pixels_from_right
-        self.curr_height = self.root.winfo_screenheight() - self.pixels_from_bottom
+        screen_width = self.root.winfo_screenwidth() * CUSTOM_TK # width of the entire screen
+        screen_height = self.root.winfo_screenheight() * CUSTOM_TK# height of the entire screen
+        self.min_width = 10 # do not let the pet move beyond this point
+        self.max_width = screen_width-110 # do not let the pet move beyond this point
+        
+        # change starting properties of the window
+        self.curr_width = screen_width-self.pixels_from_right 
+        self.curr_height = screen_height-self.pixels_from_bottom 
         self.root.geometry('%dx%d+%d+%d' % (100, 100, self.curr_width, self.curr_height))
+        
         self.root.after(self.delay, self.update, 0, 'sleep')
         self.root.attributes('-fullscreen', False)
 
-        self.confirm_button.destroy()
-        self.pet_moving_button.destroy()
+        self.configuration_label.destroy()
+        self.configuration_frame.destroy()
         self.mode_button.destroy()
-        self.confirm_button.destroy()
-        self.window_frame.destroy()
+        self.log_download_button.destroy()
         self.label = tkinter.Label(self.root,bd=0,bg='black') # borderless window
         self.label.pack()
     
@@ -297,7 +257,7 @@ class Pet:
     
 
     def getNextAnimation(self, curr_animation):
-        if not self.configurations['pet_move']:
+        if self.pet_moving_setting_var.get() == "off":
             if self.server.event_queue.qsize() != 0:
                 next_animation = {
                     'idle': 'idle_to_sleep',
@@ -344,7 +304,31 @@ class Pet:
         self.root.after(self.delay, self.update, 0, 'sleep') # start on idle
         self.root.mainloop()
     
-    
+    def start_drag(self, event):
+        if self.current_mode == "pet":
+            self.is_dragging = True
+            self.offset_x = event.x
+            self.offset_y = event.y
+
+        if len(self.unsolved_event) == 0:
+            print("detected left click, nothing happened")
+        else:
+            event = self.unsolved_event.pop(0)
+            answer = askyesno(message = self.server.confirm_service.get_confirmation_text(event.message))
+            self.server.handler_queue.put(answer)
+
+    def drag(self, event):
+        if self.current_mode == "pet" and self.is_dragging:
+            new_x = self.root.winfo_pointerx() - self.offset_x
+            new_y = self.root.winfo_pointery() - self.offset_y
+            self.curr_width = new_x
+            self.curr_height = new_y
+            self.root.geometry(f'100x100+{int(self.curr_width)}+{int(self.curr_height)}')
+
+    def stop_drag(self, event):
+        if self.current_mode == "pet":
+            self.is_dragging = False
+
     def quit(self):
         self.root.destroy()
         self.server_thread.join()
