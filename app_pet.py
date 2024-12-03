@@ -87,7 +87,8 @@ class Server:
 
     def fetch_email(self):
         if self.test_old_emails:
-            fetch_start_timestamp = 1
+            # fetch_start_timestamp = 1
+            fetch_start_timestamp = 1732841699
         else:
             fetch_start_timestamp = time.time()
 
