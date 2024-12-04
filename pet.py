@@ -9,7 +9,7 @@ import threading
 from data import TokenExpirationPolicy
 import customtkinter
 
-CUSTOM_TK = 1.67
+CUSTOM_TK = 1.67 if system() == "Windows" else 1
 
 class Pet:
     def __init__(self):
@@ -51,15 +51,18 @@ class Pet:
             "Expired after 2 hours": [TokenExpirationPolicy.EXPIRE_AFTER_TIME, 1, 7200]
         }
 
+        self.zoom_ratio = 9 if system() == "Windows" else 1
+        self.subsample_ratio = 5 if system() == "Windows" else 1
+
         # initialize frame arrays
         self.animation = dict(
-            idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(5)],
-            idle_to_sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle-to-sleep.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
-            sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(3)]*3,
-            sleep_to_idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep-to-idle.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
-            walk_left = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-left.gif'), format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
-            walk_right = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-right.gif'),format = 'gif -index %i' % i).zoom(9,9).subsample(5,5) for i in range(8)],
-            wait_for_response = [tkinter.PhotoImage(file=os.path.abspath('gifs/wait_for_response.png')).zoom(9,9).subsample(5,5)]
+            idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle.gif'), format = 'gif -index %i' % i).zoom(self.zoom_ratio).subsample(self.subsample_ratio) for i in range(5)],
+            idle_to_sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/idle-to-sleep.gif'), format = 'gif -index %i' % i).zoom(self.zoom_ratio).subsample(self.subsample_ratio) for i in range(8)],
+            sleep = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep.gif'), format = 'gif -index %i' % i).zoom(self.zoom_ratio).subsample(self.subsample_ratio) for i in range(3)]*3,
+            sleep_to_idle = [tkinter.PhotoImage(file=os.path.abspath('gifs/sleep-to-idle.gif'), format = 'gif -index %i' % i).zoom(self.zoom_ratio).subsample(self.subsample_ratio) for i in range(8)],
+            walk_left = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-left.gif'), format = 'gif -index %i' % i).zoom(self.zoom_ratio).subsample(self.subsample_ratio) for i in range(8)],
+            walk_right = [tkinter.PhotoImage(file=os.path.abspath('gifs/walk-right.gif'),format = 'gif -index %i' % i).zoom(self.zoom_ratio).subsample(self.subsample_ratio) for i in range(8)],
+            wait_for_response = [tkinter.PhotoImage(file=os.path.abspath('gifs/wait_for_response.png')).zoom(self.zoom_ratio).subsample(self.subsample_ratio)]
         )
 
         # window configuration

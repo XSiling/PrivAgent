@@ -170,9 +170,9 @@ def get_cal_events_with_http_api():
         print("Getting calendar events")
         headers = {
             'Content-Type': 'application/json', 
-            'Authorization': 'Bearer ya29.a0AeDClZBo-SnrW8t_MQofNaGwN2E59YPtdhvU7OcaiUE81y-dgMrQE_9lKUzxv1ZtzNSev9P_1bnXRuyMc3YKuwtLgrn8eTFTRCrY_wcAFy_nSvw7N7yb3dys2nqZPGxCPxTANjN22R4h2lnQ4hjLGWlwha0Pub8DVVOhP6dmaCgYKAQoSARASFQHGX2Mi4x4qfVzryzbxKrHRgdZ4fw0175'
+            'Authorization': 'Bearer ya29.a0AeDClZDYU0lDGlEG5BS71r2iGsqQvIjz-igxD1ggNCLNoYtpmDAl7CmnRdTuNMApHICl1vcZO83qQP1JPbS-fGkLsMogOIIz4BHEB-PFyt7iujwFuwfhovfmuHCAIrG_G29Jv80saexQtaSCexlOtdlmyMvxD3p6zch98iuiaCgYKAaISARASFQHGX2MiwyPP_PAoYZmvlAb5fXl6ag0175'
         }
-        params = None
+        params = {'timeMin': '2024-12-01T00:00:00Z', 'timeMax': '2024-12-31T23:59:59Z', 'singleEvents': True, 'orderBy': 'startTime', 'timeZone': 'America/Los_Angeles'}
         body = None
         response = requests.get("https://www.googleapis.com/calendar/v3/calendars/primary/events", params=params, headers=headers, json=body)
 
@@ -202,4 +202,4 @@ def delete_cal_event():
 if __name__ == '__main__':
     # print(get_token("https://www.googleapis.com/auth/calendar").token)
     # create_calendar_event_with_http_api()
-    delete_cal_event()
+    get_cal_events_with_http_api()
