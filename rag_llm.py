@@ -2,11 +2,10 @@
 
 import requests
 import numpy as np
-from llama_index.core.llms import ChatMessage, MessageRole
-from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.llms.lmstudio import LMStudio
 from llama_index.core import SimpleDirectoryReader, Settings, VectorStoreIndex, PromptTemplate
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.chat_engine import SimpleChatEngine
 
 
 class LocalAPIEmbedding(BaseEmbedding):
@@ -94,7 +93,7 @@ class RagLLM:
 
         # Do not use query engine as it can't save history easily
         self.query_engine_with_rag = index.as_chat_engine(chat_mode="context", context_prompt=qa_prompt_tmpl)
-        self.query_engine_without_rag = index.as_chat_engine(chat_mode="best")
+        self.query_engine_without_rag = SimpleChatEngine.from_defaults()
 
         print("Initialized.")
 

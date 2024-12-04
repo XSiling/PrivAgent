@@ -40,8 +40,9 @@ class LLMAgent:
             If the user doesn't ask you to delete something, summarize the user's instruction of the Google api task in one short paragraph, containing all essential information, for example title, description, time including year, timezone, location, content, etc. \
             If timezone is not specified, use Los Angeles as default. If the year is not specified, it is {current_year} now. \
             Directly return with the summary without asking me for additional information. Return exactly one most related task in the summary."
-        response = self.query(system_msg, message, self.use_rag)
-        # response = self.query(system_msg, message, False)
+
+        response = self.query(system_msg, message, False)
+
         print("Shortened Query: ", response)
 
         return response
@@ -132,7 +133,7 @@ class LLMAgent:
     def get_service_api(self, message):
         system_msg = "You are an LLM agent that helps user generate function calls to Google HTTP API. \
             Based on the user's desired action on their Google account and the above generated code, \
-            return in one line the Google API we need to call in order to perform the user-specified instruction. \
+            return in one line the exact Google API we need to call in order to perform the user-specified instruction. \
             Do not give instructions, do not format the output, do not include the values of params such as eventId or fileId for the function call, do not include symbols like { or }, just a plain API link. \
             "
         
@@ -140,7 +141,7 @@ class LLMAgent:
         lines = response.split("\n")
         api = [line for line in lines if "https://" in line][0]
         api = re.sub("`|'|\{|\}", "", api)
-        
+        api = api.split("?")[0]
 
         print("Service API: ", api)
         return api

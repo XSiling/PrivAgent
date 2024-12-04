@@ -99,21 +99,27 @@ class ValidationService:
             # get_calendar_events
             # by default fetch all the events on today
             case 3:
-                if 'timeMin' not in request.body:
-                    request.body['timeMin'] = datetime.now().strftime("%Y-%m-%dT00:00:00Z")
-                if 'timeMax' not in request.body:
-                    request.body['timeMax'] = datetime.now().strftime("%Y-%m-%dT23:59:59Z")
-                if 'singleEvents' not in request.body:
-                    request.body['singleEvents'] = True
-                if 'orderBy' not in request.body:
-                    request.body['orderBy'] = 'startTime'
-                if 'timeZone' not in request.body:
-                    request.body['TimeZone'] = 'America/Los_Angeles'
+                if 'timeMin' not in request.params:
+                    request.params['timeMin'] = datetime.now().strftime("%Y-%m-%dT00:00:00Z")
+                elif not request.params['timeMin'].endswith('Z'):
+                    request.params['timeMin'] += 'Z'
+
+                if 'timeMax' not in request.params:
+                    request.params['timeMax'] = datetime.now().strftime("%Y-%m-%dT23:59:59Z")
+                elif not request.params['timeMax'].endswith('Z'):
+                    request.params['timeMax'] += 'Z'
+                
+                if 'singleEvents' not in request.params:
+                    request.params['singleEvents'] = True
+                if 'orderBy' not in request.params:
+                    request.params['orderBy'] = 'startTime'
+                if 'timeZone' not in request.params:
+                    request.params['TimeZone'] = 'America/Los_Angeles'
 
             #delete_calendar_event
             case 4:
                 request.body = {}
-                if 'eventId' not in request.params:
+                if not request.params or 'eventId' not in request.params:
                     raise Exception("Lack eventId in delete calendar event api request")
 
             # delete_file_event

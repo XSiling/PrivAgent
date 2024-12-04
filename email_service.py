@@ -105,7 +105,7 @@ class EmailService:
             filtered_msg = self.filter_message(msg)
             if filtered_msg != None:
                 messages.append(filtered_msg)
-        return messages[::-1]
+        return messages
     
     def generate_prompt(self, message: GmailMessage):
         # Get related api history
