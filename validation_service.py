@@ -4,14 +4,14 @@ from datetime import datetime, timedelta
 from email_service import EmailService
 
 class ValidationService:
-    def validate_response(self, response: list[APICall]):
+    def validate_response(self, response: list[APICall], history_resource_id: str):
         self.check_response_not_empty(response)
 
         for api_call in response:
             self.check_api_in_whitelist(api_call)
             self.check_essential_params(api_call)
             self.check_valid_params(api_call)
-            # self.check_resource_id_is_related(api_call)
+            self.check_resource_id_is_related(api_call, history_resource_id)
 
 
     def check_valid_params(self, response: APICall):
@@ -46,6 +46,9 @@ class ValidationService:
             # create_calendar_event
             # by default create on right now with 1 hour window
             case 0:
+                if not request.body:
+                    request.body = {}
+
                 if 'start' not in request.body:
                     request.body['start'] = {
                         'dateTime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
@@ -69,17 +72,29 @@ class ValidationService:
             # create_doc
             # by default with a title 
             case 1:
-                if 'title' not in request.body:
-                    request.body['title'] = 'LLM Agent Docs'
+                if request.body and 'summary' in request.body:
+                    request.body['title'] = request.body['summary']
+                if request.body and 'title' in request.body:
+                    title = request.body['title']
+                else:
+                    title = 'LLM Agent Docs'
+                request.body = {
+                    'title': title
+                }
 
             # create_sheet
             # by default with a title
             case 2:
-                if 'properties' not in request.body:
-                    request.body['properties'] = {}
-                
-                if 'title' not in request.body['properties']:
-                    request.body['properties']['title'] = 'LLM Agent Sheet'
+                if request.body and 'properties' in request.body and 'title' in request.body['properties']:
+                    title = request.body['properties']['title']
+                else:
+                    title = 'LLM Agent Sheet'
+
+                request.body = {
+                    "properties":{
+                        "title": title
+                    }
+                }
 
             # get_calendar_events
             # by default fetch all the events on today
@@ -118,20 +133,16 @@ class ValidationService:
             raise Exception("API call not allowed.")
         
 
-    def check_resource_id_is_related(self, response: APICall):
+    def check_resource_id_is_related(self, response: APICall, history_resource_id: str):
         # Check for delete calendar event
         if response.api == "https://www.googleapis.com/calendar/v3/calendars/primary/events/eventId":
-            thread_id = response.thread_id
-            _, id = EmailService.get_related_history(thread_id)
             resource_id = response.params["eventId"]
-            if id != resource_id: 
+            if history_resource_id != resource_id: 
                 raise Exception("Target event is not created by this thread.")
         # Check for delete file
         elif response.api == "https://www.googleapis.com/drive/v2/files/fileId":
-            thread_id = response.thread_id
-            _, id = EmailService.get_related_history(thread_id)
             resource_id = response.params["fileId"]
-            if id != resource_id: 
+            if history_resource_id != resource_id: 
                 raise Exception("Target file is not created by this thread.")
         
 

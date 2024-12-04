@@ -2,7 +2,8 @@ from enum import Enum
 from requests.models import Response
 
 class GmailConfiguration:
-    email_whitelist = ["jih119@ucsd.edu", "xisheng@ucsd.edu"]
+    # email_whitelist = ["jih119@ucsd.edu", "xisheng@ucsd.edu"]
+    email_whitelist = ["jih119@ucsd.edu"]
 
 class TokenExpirationPolicy(Enum):
     # expire in certain times

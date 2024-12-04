@@ -61,6 +61,8 @@ class RagLLM:
         Settings.embed_model = LocalAPIEmbedding(self.base_url + "/embeddings") # we specify the embedding model to be used
         index = VectorStoreIndex.from_documents(docs)
 
+        self.index = index
+
         # setting up the llm
         llm = LMStudio(
             model_name="meta-llama-3.1-8b-instruct",
@@ -84,8 +86,11 @@ class RagLLM:
                     "{query_str}\n"
                     "Answer: "
                     )
+        
+        # print(qa_prompt_tmpl_str_with_rag)
 
         qa_prompt_tmpl = PromptTemplate(qa_prompt_tmpl_str_with_rag)
+        self.qa_prompt_tmpl = qa_prompt_tmpl
 
         # Do not use query engine as it can't save history easily
         self.query_engine_with_rag = index.as_chat_engine(chat_mode="context", context_prompt=qa_prompt_tmpl)
@@ -98,6 +103,9 @@ class RagLLM:
         self.query_engine_with_rag.reset()
         self.query_engine_without_rag.reset()
 
+    def renew_chat_engine(self):
+        self.query_engine_with_rag = self.index.as_chat_engine(chat_mode='context', context_prompt=self.qa_prompt_tmpl)
+        self.query_engine_without_rag = engine = self.index.as_chat_engine(chat_mode='best')
 
     def query(self, system_prompt, query_prompt, use_rag=True):
         if use_rag:

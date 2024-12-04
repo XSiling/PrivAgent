@@ -122,6 +122,7 @@ class EmailService:
         return prompt
 
     def send_message_to_llm_agent(self, message: str, thread_id: str):
+        self.llm_agent.start_a_new_chat()
         response : list[APICall] = self.llm_agent.get_api_calls(message, thread_id)
         return response
     
@@ -136,7 +137,11 @@ class EmailService:
         for record in self.email_history:
             if record.gmail_message and record.gmail_message.thread_id == thread_id and record.api_call and record.api_call.method == 'POST':
                 http_response = json.loads(record.http_response.text)
-                id = http_response["id"]
+                id = ""
+                if record.api_call.api == "https://www.googleapis.com/calendar/v3/calendars/primary/events":
+                    id = http_response["id"]
+                if record.api_call.api == "https://docs.googleapis.com/v1/documents":
+                    id = http_response["documentId"]
                 api = record.api_call.api
                 return api, id
 
