@@ -66,6 +66,8 @@ class Pet:
             wait_for_response = [tkinter.PhotoImage(file=os.path.abspath('gifs/wait_for_response.png')).zoom(self.zoom_ratio).subsample(self.subsample_ratio)]
         )
 
+        self.animation['idle'][4] = self.animation['idle'][0]
+
         # window configuration
         if self.current_mode == "pet":
             self.root.overrideredirect(True) # remove UI

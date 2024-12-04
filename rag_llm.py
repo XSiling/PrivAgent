@@ -103,8 +103,9 @@ class RagLLM:
         self.query_engine_without_rag.reset()
 
     def renew_chat_engine(self):
-        self.query_engine_with_rag = self.index.as_chat_engine(chat_mode='context', context_prompt=self.qa_prompt_tmpl)
-        self.query_engine_without_rag = engine = self.index.as_chat_engine(chat_mode='best')
+        pass
+        # self.query_engine_with_rag = self.index.as_chat_engine(chat_mode='context', context_prompt=self.qa_prompt_tmpl)
+        # self.query_engine_without_rag  = self.index.as_chat_engine(chat_mode='best')
 
     def query(self, system_prompt, query_prompt, use_rag=True):
         if use_rag:
