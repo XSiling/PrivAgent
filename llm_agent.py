@@ -36,10 +36,11 @@ class LLMAgent:
 
         system_msg =f"You are an LLM agent that helps user perform google-api related tasks based on their instructions. \
             Here's the email containing the user's instruction. It may contain another email that user forwards for your context. \
-            If the user asks you to delete something, summarize the user's instruction of the Google api task in one short paragraph. You should never summary the instruction to be creation. Maintain related Google resource ID if provided. \
+            If the user asks you to delete something, summarize the user's instruction of the Google api task in one short paragraph. You should never summary the instruction to be creation.\
+            Be sure to maintain the Google resource ID if provided, which should be possibly provided at the start of the prompt. \
             If the user doesn't ask you to delete something, summarize the user's instruction of the Google api task in one short paragraph, containing all essential information, for example title, description, time including year, timezone, location, content, etc. \
             If timezone is not specified, use Los Angeles as default. If the year is not specified, it is {current_year} now. \
-            Directly return with the summary without asking me for additional information. Return exactly one google api task which is most related."
+            Directly return with the summary without asking me for additional information."
 
         response = self.query(system_msg, message, False)
 
@@ -105,7 +106,7 @@ class LLMAgent:
             Do not write time as variables. Directly write them as strings in params and body object. \
             Do not give instructions, do not give multiple outputs. \
             If there are multiple Google API requests in the content, write code for the first one. \
-            Follow the params and body format in context. \
+            Follow the correct api, method, params and body format in context. \
             "
         
         response = self.query(system_msg, message, self.use_rag)
@@ -134,7 +135,9 @@ class LLMAgent:
         system_msg = "You are an LLM agent that helps user generate function calls to Google HTTP API. \
             Based on the user's desired action on their Google account and the above generated code, \
             return in one line the exact Google API we need to call in order to perform the user-specified instruction. \
-            Do not give instructions, do not format the output, do not include the values of params such as eventId or fileId for the function call, do not include symbols like { or }, just a plain API link. \
+            Make use of the correct api format provided in the context. \
+            Remove anything as and after : at the end of the api. \
+            Do not give instructions, do not format the output, do not include actual param values, do not include symbols like { or }, just a plain API link. \
             "
         
         response = self.query(system_msg, message, self.use_rag)

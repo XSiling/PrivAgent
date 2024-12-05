@@ -9,7 +9,7 @@ class ValidationService:
 
         for api_call in response:
             self.check_api_in_whitelist(api_call)
-            self.check_essential_params(api_call)
+            self.check_essential_params(api_call, history_resource_id)
             self.check_valid_params(api_call)
             self.check_resource_id_is_related(api_call, history_resource_id)
 
@@ -37,7 +37,7 @@ class ValidationService:
         end_time = end_time.strftime("%Y-%m-%dT%H:%M:%S")
         return end_time
 
-    def check_essential_params(self, request: APICall):
+    def check_essential_params(self, request: APICall, history_resource_id):
         req = (request.method, request.api)
         req_index = ValidationConfiguration.api_whitelist.index(req)
         # fill in the blank parameters, if impossible then throw exception
@@ -72,12 +72,16 @@ class ValidationService:
             # create_doc
             # by default with a title 
             case 1:
-                if request.body and 'summary' in request.body:
-                    request.body['title'] = request.body['summary']
+                title = "LLM Agent Docs"
+
+                # has title, just return with the original title
                 if request.body and 'title' in request.body:
                     title = request.body['title']
-                else:
-                    title = 'LLM Agent Docs'
+            
+                # has summary, no title, substitude title with summary
+                if request.body and 'title' not in request.body and 'summary' in request.body:
+                    title = request.body['summary']
+
                 request.body = {
                     'title': title
                 }
@@ -120,13 +124,18 @@ class ValidationService:
             case 4:
                 request.body = {}
                 if not request.params or 'eventId' not in request.params:
-                    raise Exception("Lack eventId in delete calendar event api request")
-
+                    request.params = {
+                        'eventId': history_resource_id
+                    }
+                    
             # delete_file_event
             case 5:
                 request.body = {}
-                if 'fileId' not in request.params:
-                    raise Exception("Lack fileId in delete file event")
+                if not request.params or 'fileId' not in request.params:
+                    request.params = {
+                        'fileId': history_resource_id
+                    }
+
 
     def check_response_not_empty(self, response: list[APICall]):
         if len(response) == 0:

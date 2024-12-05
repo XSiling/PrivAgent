@@ -66,7 +66,7 @@ class RagLLM:
         llm = LMStudio(
             model_name="meta-llama-3.1-8b-instruct",
             base_url=self.base_url,
-            temperature=0.1,
+            temperature=0.05,
             context_window=8192,
             request_timeout=120,
         )
