@@ -37,7 +37,7 @@ class LLMAgent:
         system_msg =f"You are an LLM agent that helps user perform google-api related tasks based on their instructions. \
             Here's the email containing the user's instruction. It may contain another email that user forwards for your context. \
             If the user asks you to delete something, summarize the user's instruction of the Google api task in one short paragraph. You should never summary the instruction to be creation.\
-            Be sure to maintain the Google resource ID if provided, which should be possibly provided at the start of the prompt. \
+            Be sure to maintain the Google resource ID in the summary if provided, which should be possibly provided at the start of the prompt. \
             If the user doesn't ask you to delete something, summarize the user's instruction of the Google api task in one short paragraph, containing all essential information, for example title, description, time including year, timezone, location, content, etc. \
             If timezone is not specified, use Los Angeles as default. If the year is not specified, it is {current_year} now. \
             Directly return with the summary without asking me for additional information."
@@ -106,7 +106,7 @@ class LLMAgent:
             Do not write time as variables. Directly write them as strings in params and body object. \
             Do not give instructions, do not give multiple outputs. \
             If there are multiple Google API requests in the content, write code for the first one. \
-            Follow the correct api, method, params and body format in context. \
+            Follow the correct api, tips, method, params and body format in context, especially for those actions related to delete. \
             "
         
         response = self.query(system_msg, message, self.use_rag)

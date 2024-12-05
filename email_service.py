@@ -96,7 +96,6 @@ class EmailService:
     
     def retrieve_messages(self, start_timestamp):
         service = self.gmail_service.get_service()
-        # import pdb;pdb.set_trace()
         results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=f"after:{start_timestamp}").execute()
         messageIds = results.get('messages',[])
         messages = []
@@ -105,13 +104,13 @@ class EmailService:
             filtered_msg = self.filter_message(msg)
             if filtered_msg != None:
                 messages.append(filtered_msg)
-        return messages
+        return messages[::-1]
     
     def generate_prompt(self, message: GmailMessage):
         # Get related api history
         api, id = self.get_related_history(message.thread_id)
         if api is not None and id is not None:
-            history_prompt = "The related Google resource ID created by the api " + api + " is " + id
+            history_prompt = "The related Google resource ID is " + id
         else:
             history_prompt = ""
         
