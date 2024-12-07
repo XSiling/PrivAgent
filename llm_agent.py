@@ -187,14 +187,16 @@ class LLMAgent:
             Based on the user's action and the generated code, provide a single line with the exact Google API endpoint to call to perform the requested action. \
             Use the correct API format from the context, and exclude any content following a colon in the API. \
             If there is resource ID and the action is related to delete, include the variable name as fileId or eventId at the end of the api rather than the actual ID value. \
-            If the action is deleting some resource and there is fileId in the api, replace the docs with www, replace the v1/documents with v2/files in the answer.\
+            If the action is deleting some resource and there is fileId in the api, replace the docs with www, also replace the v1/documents with v2/files in the answer.\
             Do not provide instructions, formatting, actual parameter values, or symbols like `{` or `<`—just the plain API link."
-        
+
         response = self.query(system_msg, message, self.use_rag)
         lines = response.split("\n")
         api = [line for line in lines if "https://" in line][0]
         api = re.sub("`|'|\{|\}", "", api)
         api = api.split("?")[0]
+
+        api = api.replace("docs.googleapis.com/v1/documents/fileId", "www.googleapis.com/v2/files/fileId")
 
         print("Service API: ", api)
         return api
