@@ -86,6 +86,11 @@ class ValidationService:
                     'title': title
                 }
 
+                # remove request.params
+                request.params = {
+                    
+                }
+
             # create_sheet
             # by default with a title
             case 2:
@@ -127,6 +132,8 @@ class ValidationService:
                     request.params = {
                         'eventId': history_resource_id
                     }
+                if not request.params['eventId']:
+                    raise Exception("Invalid eventId")
                     
             # delete_file_event
             case 5:
@@ -135,6 +142,8 @@ class ValidationService:
                     request.params = {
                         'fileId': history_resource_id
                     }
+                if not request.params['fileId']:
+                    raise Exception("Invalid fileId")
 
 
     def check_response_not_empty(self, response: list[APICall]):

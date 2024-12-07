@@ -30,7 +30,7 @@ class Pet:
         self.confirmation_setting_var = customtkinter.StringVar(value="on")
         self.pet_moving_setting_var = customtkinter.StringVar(value="on")
         self.expiration_setting_var = tkinter.StringVar()
-        self.expiration_setting_var = customtkinter.StringVar(value="Expired at once")
+        self.expiration_setting_var = customtkinter.StringVar(value="Expired after 2 times")
 
         self.expiration_setting_choices = (
             "Expired at once",
