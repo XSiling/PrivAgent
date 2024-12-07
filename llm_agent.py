@@ -168,7 +168,7 @@ class LLMAgent:
         response = self.query(system_msg, message, self.use_rag)
         lines = response.split("\n")
         scope = [line for line in lines if "https://" in line][0]
-        scope = re.sub("`|'|\{|\}", "", scope)
+        scope = re.sub("`|'|\{|\}|\"", "", scope)
 
         print("Service Scope: ", scope)
         return scope
@@ -186,9 +186,8 @@ class LLMAgent:
         system_msg = "You are an LLM agent that assists users in generating function calls for Google HTTP APIs. \
             Based on the user's action and the generated code, provide a single line with the exact Google API endpoint to call to perform the requested action. \
             Use the correct API format from the context, and exclude any content following a colon in the API. \
-            If there is resource ID, represent it by a variable name rather than the actual value, name it as fileId for docs or eventId for event. \
-            DO NOT include the actual resource id variable values in the api url. \
-            If the action is deleting some resource and there is fileId in the api, change the docs into www, change the v1/documents into v2/files in the answer.\
+            If there is resource ID and the action is related to delete, include the variable name as fileId or eventId at the end of the api rather than the actual ID value. \
+            If the action is deleting some resource and there is fileId in the api, replace the docs with www, replace the v1/documents with v2/files in the answer.\
             Do not provide instructions, formatting, actual parameter values, or symbols like `{` or `<`—just the plain API link."
         
         response = self.query(system_msg, message, self.use_rag)
