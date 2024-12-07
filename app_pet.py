@@ -88,7 +88,7 @@ class Server:
     def fetch_email(self):
         if self.test_old_emails:
             # fetch_start_timestamp = 1
-            fetch_start_timestamp = 1732841699
+            fetch_start_timestamp = 1733191695
         else:
             fetch_start_timestamp = time.time()
 
@@ -115,8 +115,15 @@ class Server:
             else:
                 try:
                     prompt = self.email_service.generate_prompt(current_message)
-                    response: list[APICall] = self.email_service.send_message_to_llm_agent(prompt)
-                    self.validation_service.validate_response(response)
+                    response: list[APICall] = self.email_service.send_message_to_llm_agent(prompt, current_message.thread_id)
+                    
+                    _, history_resource_id = self.email_service.get_related_history(current_message.thread_id)
+                    print("before validation")
+                    display_response(response)
+
+                    self.validation_service.validate_response(response, history_resource_id)
+                    print("after validation")
+                    display_response(response)
 
                     for api_call in response:
                         self.event_queue.put(ConfirmEvent(api_call))
@@ -144,3 +151,12 @@ class Server:
 if __name__ == '__main__':
     server = Server()
     server.run_server()
+
+
+def display_response(response: list[APICall]):
+    for api_call in response:
+        print("scope:", api_call.scope)
+        print("api:", api_call.api)
+        print("method:", api_call.method)
+        print("params:", api_call.params)
+        print("body", api_call.body)

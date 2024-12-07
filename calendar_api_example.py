@@ -116,10 +116,10 @@ def create_calendar_event_with_http_api():
         print("Creating calendar event")
         headers = {
             'Content-Type': 'application/json', 
-            'Authorization': 'Bearer ya29.a0AeDClZDCxG8wDvdi1TOOR6XZL7pLGAS7YpLpejDj_zgdtwjb62vayckGzN3jGnYSvpETUGXm5zvTZI2VO-aF7gauOpXsYQDYb22V_0zbj93k4wvS6VdR91Xe1ztENMuwl0nEe1OYYGmV6OKauxZl4zLoAiWjQKJBW_-k6yveaCgYKAT4SARASFQHGX2Mip0OaCNaaDTA31VHghX9oHw0175'
+            'Authorization': 'Bearer ya29.a0AeDClZBS-xl3YwosvBKNkbwqDt46rip2vRGiT9DV9aZ7pfnxbQNP7_sqPl0t8xRxjg6tg-UczRaovg0367EEA8HuEqk1235ygF6lHUoBUYWX9g-2Xk5DXAvFKvB7fWNkMiVj8c4lWQE1EJIoJfX-y3gs5oMx44bM7W1sUS8qaCgYKARgSARASFQHGX2MiDcjx5aJJchIZXmGdF_aalg0175'
         }
         params = {}
-        body = {'summary': 'Project Meeting with Jieyi', 'description': '', 'start': {'dateTime': '2024-10-24T13:00:00', 'timeZone': 'America/Los_Angeles'}, 'end': {'dateTime': '2024-10-24T14:30:00', 'timeZone': 'America/Los_Angeles'}}
+        body = {'summary': 'Project Meeting with Jieyi', 'description': '', 'start': {'dateTime': '2024-12-02T13:00:00', 'timeZone': 'America/Los_Angeles'}, 'end': {'dateTime': '2024-12-02T14:30:00', 'timeZone': 'America/Los_Angeles'}}
         response = requests.post("https://www.googleapis.com/calendar/v3/calendars/primary/events", params=params, headers=headers, json=body)
 
         print(response.text)
@@ -170,9 +170,9 @@ def get_cal_events_with_http_api():
         print("Getting calendar events")
         headers = {
             'Content-Type': 'application/json', 
-            'Authorization': 'Bearer ya29.a0AeDClZBo-SnrW8t_MQofNaGwN2E59YPtdhvU7OcaiUE81y-dgMrQE_9lKUzxv1ZtzNSev9P_1bnXRuyMc3YKuwtLgrn8eTFTRCrY_wcAFy_nSvw7N7yb3dys2nqZPGxCPxTANjN22R4h2lnQ4hjLGWlwha0Pub8DVVOhP6dmaCgYKAQoSARASFQHGX2Mi4x4qfVzryzbxKrHRgdZ4fw0175'
+            'Authorization': 'Bearer ya29.a0AeDClZDYU0lDGlEG5BS71r2iGsqQvIjz-igxD1ggNCLNoYtpmDAl7CmnRdTuNMApHICl1vcZO83qQP1JPbS-fGkLsMogOIIz4BHEB-PFyt7iujwFuwfhovfmuHCAIrG_G29Jv80saexQtaSCexlOtdlmyMvxD3p6zch98iuiaCgYKAaISARASFQHGX2MiwyPP_PAoYZmvlAb5fXl6ag0175'
         }
-        params = None
+        params = {'timeMin': '2024-12-01T00:00:00Z', 'timeMax': '2024-12-31T23:59:59Z', 'singleEvents': True, 'orderBy': 'startTime', 'timeZone': 'America/Los_Angeles'}
         body = None
         response = requests.get("https://www.googleapis.com/calendar/v3/calendars/primary/events", params=params, headers=headers, json=body)
 
@@ -188,11 +188,11 @@ def delete_cal_event():
         print("Deleting calendar events")
         headers = {
             'Content-Type': 'application/json', 
-            'Authorization': 'Bearer ya29.a0AeDClZBo-SnrW8t_MQofNaGwN2E59YPtdhvU7OcaiUE81y-dgMrQE_9lKUzxv1ZtzNSev9P_1bnXRuyMc3YKuwtLgrn8eTFTRCrY_wcAFy_nSvw7N7yb3dys2nqZPGxCPxTANjN22R4h2lnQ4hjLGWlwha0Pub8DVVOhP6dmaCgYKAQoSARASFQHGX2Mi4x4qfVzryzbxKrHRgdZ4fw0175'
+            'Authorization': 'Bearer ya29.a0AeDClZBS-xl3YwosvBKNkbwqDt46rip2vRGiT9DV9aZ7pfnxbQNP7_sqPl0t8xRxjg6tg-UczRaovg0367EEA8HuEqk1235ygF6lHUoBUYWX9g-2Xk5DXAvFKvB7fWNkMiVj8c4lWQE1EJIoJfX-y3gs5oMx44bM7W1sUS8qaCgYKARgSARASFQHGX2MiDcjx5aJJchIZXmGdF_aalg0175'
         }
-        params = {"eventId": "11"}
+        params = {"eventId": "5m5abj0bmdvdn4fcdfk7mpht0k"}
         body = None
-        response = requests.delete("https://www.googleapis.com/calendar/v3/calendars/primary/events", params=params, headers=headers, json=body)
+        response = requests.delete("https://www.googleapis.com/calendar/v3/calendars/primary/events/eventId", params=params, headers=headers, json=body)
 
         print(response.text)
 
@@ -200,5 +200,6 @@ def delete_cal_event():
         print(f"An error occurred: {error}")
 
 if __name__ == '__main__':
-    print(get_token("https://www.googleapis.com/auth/calendar").token)
-    create_calendar_event_with_http_api()
+    # print(get_token("https://www.googleapis.com/auth/calendar").token)
+    # create_calendar_event_with_http_api()
+    get_cal_events_with_http_api()

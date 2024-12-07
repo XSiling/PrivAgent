@@ -77,18 +77,25 @@ class EmailService:
         if email_address not in self.gmail_configurations.email_whitelist:
             return None
         
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         content = self.extract_message_content(payload)
         content = urlsafe_b64decode(content)
         content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff\xe2\x80\xaf]', '', str(content)).replace('\\r','').replace('\\n',' ')
+
+        content = self.filter_second_forward(content)
 
         gmail_message = GmailMessage(id, thread_id, send_from, date, send_to, content)
 
         return gmail_message
     
+    def filter_second_forward(self, content: str):
+        split_content = content.split("---------- Forwarded message ---------")
+        if len(split_content) >= 3:
+            return split_content[0] + split_content[-1]
+        return content
+    
     def retrieve_messages(self, start_timestamp):
         service = self.gmail_service.get_service()
-        # import pdb;pdb.set_trace()
         results = service.users().messages().list(userId='me', labelIds=['INBOX'], q=f"after:{start_timestamp}").execute()
         messageIds = results.get('messages',[])
         messages = []
@@ -103,18 +110,19 @@ class EmailService:
         # Get related api history
         api, id = self.get_related_history(message.thread_id)
         if api is not None and id is not None:
-            history_prompt = "The related Google resource ID created by the api " + api + " is " + id
+            history_prompt = "The related Google resource ID is " + id
         else:
             history_prompt = ""
         
         # Generate the prompt containing current email message and history data
-        prompt = "Sender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content) + "\n" + history_prompt
+        prompt = history_prompt + "\nSender: " + message.send_from + "\nReceiver: " + message.send_to + "\nDate: " + message.date + "\nContent: " + str(message.content)
         
         print("Prompt: \n", prompt)
         return prompt
 
-    def send_message_to_llm_agent(self, message: str):
-        response : list[APICall] = self.llm_agent.get_api_calls(message)
+    def send_message_to_llm_agent(self, message: str, thread_id: str):
+        self.llm_agent.start_a_new_chat()
+        response : list[APICall] = self.llm_agent.get_api_calls(message, thread_id)
         return response
     
     def save_history(self, gmail_message: GmailMessage, response: APICall, confirm_response, error: Exception = None):
@@ -126,9 +134,13 @@ class EmailService:
     def get_related_history(self, thread_id):
         # return api and id 
         for record in self.email_history:
-            if record.gmail_message.thread_id == thread_id and record.api_call.method == 'POST':
+            if record.gmail_message and record.gmail_message.thread_id == thread_id and record.api_call and record.api_call.method == 'POST':
                 http_response = json.loads(record.http_response.text)
-                id = http_response["id"]
+                id = ""
+                if record.api_call.api == "https://www.googleapis.com/calendar/v3/calendars/primary/events":
+                    id = http_response["id"]
+                if record.api_call.api == "https://docs.googleapis.com/v1/documents":
+                    id = http_response["documentId"]
                 api = record.api_call.api
                 return api, id
 
