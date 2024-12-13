@@ -63,3 +63,4 @@ Each time running the app:
 
 Reference: 
 https://developers.google.com/calendar/api/quickstart/python
+Desktop Pet starter code: https://github.com/tommyli3318/desktop-pet
