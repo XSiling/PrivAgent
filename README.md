@@ -62,5 +62,7 @@ Each time running the app:
 * Either save the token as file, or the user has to authenticate every time **(Possible encryption improvements here)**
 
 Reference: 
+
 https://developers.google.com/calendar/api/quickstart/python
+
 Desktop Pet starter code: https://github.com/tommyli3318/desktop-pet
